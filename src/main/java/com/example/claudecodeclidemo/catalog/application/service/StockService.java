@@ -11,8 +11,10 @@ import com.example.claudecodeclidemo.catalog.domain.vo.Money;
 import com.example.claudecodeclidemo.catalog.domain.vo.ProductId;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional
 public class StockService implements CatalogQueryPort, StockReservationPort {
 
     private final StockRepository stockRepository;
@@ -28,6 +30,7 @@ public class StockService implements CatalogQueryPort, StockReservationPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Money getPrice(ProductId productId) {
         return productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException(productId))

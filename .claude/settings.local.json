@@ -1,9 +1,20 @@
 {
+  "env": {
+    "ECC_DISABLED_HOOKS": "pre:edit-write:gateguard-fact-force,pre:bash:gateguard-fact-force"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew test *)",
+      "Bash(xargs grep -h 'tests=')",
+      "Bash(awk -F'\"' '{sum+=$2} END{print \"Total tests:\", sum}')",
+      "Bash(xargs grep -h \"testcase\")",
+      "Bash(python3 -c ' *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
+    ]
+  },
   "enabledPlugins": {
     "ddd@context-engineering-kit": true,
     "ecc@everything-claude-code": true
-  },
-  "env": {
-    "ECC_DISABLED_HOOKS": "pre:edit-write:gateguard-fact-force,pre:bash:gateguard-fact-force"
   }
 }

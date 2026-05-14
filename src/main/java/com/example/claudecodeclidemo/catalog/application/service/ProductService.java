@@ -14,8 +14,10 @@ import com.example.claudecodeclidemo.catalog.domain.exception.ProductNotFoundExc
 import com.example.claudecodeclidemo.catalog.domain.vo.ProductId;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional
 public class ProductService implements CreateProductUseCase, QueryProductUseCase {
 
     private final ProductRepository productRepository;
@@ -50,6 +52,7 @@ public class ProductService implements CreateProductUseCase, QueryProductUseCase
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Product findById(ProductId id) {
         return productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException(id));

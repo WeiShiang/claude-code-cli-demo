@@ -30,6 +30,11 @@ public class Product extends AggregateRoot {
         this.status = status;
     }
 
+    public static Product reconstitute(ProductId id, String name, Sku sku, Money price,
+                                       CategoryId categoryId, ProductStatus status) {
+        return new Product(id, name, sku, price, categoryId, status);
+    }
+
     public static Product create(String name, Sku sku, Money price, CategoryId categoryId) {
         if (name == null || name.isBlank()) throw new InvalidProductNameException();
         var product = new Product(ProductId.generate(), name, sku, price, categoryId, ProductStatus.ACTIVE);

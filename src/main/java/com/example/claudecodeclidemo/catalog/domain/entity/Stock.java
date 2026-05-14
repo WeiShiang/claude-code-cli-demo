@@ -25,6 +25,10 @@ public class Stock extends AggregateRoot {
         this.reserved = reserved;
     }
 
+    public static Stock reconstitute(ProductId productId, Sku sku, int quantity, int reserved) {
+        return new Stock(productId, sku, quantity, reserved);
+    }
+
     public static Stock create(ProductId productId, Sku sku, int quantity) {
         if (quantity < 0) throw new InvalidStockQuantityException(quantity);
         return new Stock(productId, sku, quantity, 0);
