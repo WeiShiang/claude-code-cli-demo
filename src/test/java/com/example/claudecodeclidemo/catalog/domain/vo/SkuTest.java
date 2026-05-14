@@ -49,4 +49,16 @@ class SkuTest {
         var b = new Sku("PROD-002");
         assertThat(a).isNotEqualTo(b);
     }
+
+    @Test
+    void toString回傳SKU值() {
+        var sku = new Sku("PROD-001");
+        assertThat(sku.toString()).isEqualTo("PROD-001");
+    }
+
+    @Test
+    void 與非Sku物件不相等() {
+        var sku = new Sku("PROD-001");
+        assertThat(sku).isNotEqualTo("PROD-001");
+    }
 }

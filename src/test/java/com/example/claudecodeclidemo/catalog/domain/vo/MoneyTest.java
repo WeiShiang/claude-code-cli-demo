@@ -71,4 +71,28 @@ class MoneyTest {
         assertThatThrownBy(() -> twd.add(usd))
                 .isInstanceOf(CurrencyMismatchException.class);
     }
+
+    @Test
+    void null金額拋出IllegalArgumentException() {
+        assertThatThrownBy(() -> new Money(null, TWD))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void null幣別拋出IllegalArgumentException() {
+        assertThatThrownBy(() -> new Money(BigDecimal.ONE, null))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void toString包含金額和幣別代碼() {
+        var money = new Money(new BigDecimal("100"), TWD);
+        assertThat(money.toString()).contains("100").contains("TWD");
+    }
+
+    @Test
+    void 與非Money物件不相等() {
+        var money = new Money(new BigDecimal("100"), TWD);
+        assertThat(money).isNotEqualTo("100 TWD");
+    }
 }
