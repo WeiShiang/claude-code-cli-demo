@@ -24,9 +24,11 @@ import java.util.Currency;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.example.claudecodeclidemo.catalog.domain.event.ProductCreatedEvent;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -86,7 +88,7 @@ class ProductServiceTest {
         assertThat(productId).isNotNull();
         verify(productRepository).save(any());
         verify(stockRepository).save(any());
-        verify(eventPublisher, atLeastOnce()).publishEvent(any());
+        verify(eventPublisher, atLeastOnce()).publishEvent(isA(ProductCreatedEvent.class));
     }
 
     @Test

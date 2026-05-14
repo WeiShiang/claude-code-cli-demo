@@ -20,9 +20,11 @@ import java.util.Currency;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.example.claudecodeclidemo.catalog.domain.event.StockDepletedEvent;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -124,6 +126,6 @@ class StockServiceTest {
 
         stockService.deduct(productId, 3);
 
-        verify(eventPublisher, atLeastOnce()).publishEvent(any());
+        verify(eventPublisher, atLeastOnce()).publishEvent(isA(StockDepletedEvent.class));
     }
 }
