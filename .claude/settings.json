@@ -1,0 +1,6 @@
+{
+  "enabledPlugins": {
+    "ddd@context-engineering-kit": true,
+    "ecc@everything-claude-code": true
+  }
+}
