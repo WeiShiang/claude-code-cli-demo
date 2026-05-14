@@ -43,7 +43,7 @@ public class ProductService implements CreateProductUseCase, QueryProductUseCase
         }
         var product = Product.create(command.name(), command.sku(), command.price(), command.categoryId());
         var saved = productRepository.save(product);
-        stockRepository.save(Stock.create(saved.getId(), 0));
+        stockRepository.save(Stock.create(saved.getId(), product.getSku(), 0));
         product.getDomainEvents().forEach(eventPublisher::publishEvent);
         product.clearDomainEvents();
         return saved.getId();

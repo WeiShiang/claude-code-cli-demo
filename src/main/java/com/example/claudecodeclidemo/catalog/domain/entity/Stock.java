@@ -14,19 +14,20 @@ import java.time.Instant;
 public class Stock extends AggregateRoot {
 
     private final ProductId productId;
+    private final Sku sku;
     private int quantity;
     private int reserved;
-    private Sku sku;
 
-    private Stock(ProductId productId, int quantity, int reserved) {
+    private Stock(ProductId productId, Sku sku, int quantity, int reserved) {
         this.productId = productId;
+        this.sku = sku;
         this.quantity = quantity;
         this.reserved = reserved;
     }
 
-    public static Stock create(ProductId productId, int quantity) {
+    public static Stock create(ProductId productId, Sku sku, int quantity) {
         if (quantity < 0) throw new InvalidStockQuantityException(quantity);
-        return new Stock(productId, quantity, 0);
+        return new Stock(productId, sku, quantity, 0);
     }
 
     public void reserve(int amount) {
@@ -54,7 +55,7 @@ public class Stock extends AggregateRoot {
     }
 
     public ProductId getProductId() { return productId; }
+    public Sku getSku() { return sku; }
     public int getQuantity() { return quantity; }
     public int getReserved() { return reserved; }
-    public void setSku(Sku sku) { this.sku = sku; }
 }

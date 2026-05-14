@@ -7,6 +7,7 @@ import com.example.claudecodeclidemo.catalog.domain.exception.InvalidReleaseAmou
 import com.example.claudecodeclidemo.catalog.domain.exception.InvalidStockQuantityException;
 import com.example.claudecodeclidemo.catalog.domain.exception.InvalidStockReservationException;
 import com.example.claudecodeclidemo.catalog.domain.vo.ProductId;
+import com.example.claudecodeclidemo.catalog.domain.vo.Sku;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -18,30 +19,32 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class StockTest {
 
     private ProductId productId;
+    private Sku sku;
 
     @BeforeEach
     void setUp() {
         productId = new ProductId(UUID.randomUUID());
+        sku = new Sku("PROD-001");
     }
 
     // ── Invariant S-1: quantity ≥ 0 ──────────────────────────────────
 
     @Test
     void 負數庫存建立時拋出InvalidStockQuantityException() {
-        assertThatThrownBy(() -> Stock.create(productId, -1))
+        assertThatThrownBy(() -> Stock.create(productId, sku,-1))
                 .isInstanceOf(InvalidStockQuantityException.class);
     }
 
     @Test
     void 零庫存可建立() {
-        var stock = Stock.create(productId, 0);
+        var stock = Stock.create(productId, sku,0);
         assertThat(stock.getQuantity()).isEqualTo(0);
         assertThat(stock.getReserved()).isEqualTo(0);
     }
 
     @Test
     void 正數庫存可建立() {
-        var stock = Stock.create(productId, 10);
+        var stock = Stock.create(productId, sku,10);
         assertThat(stock.getQuantity()).isEqualTo(10);
     }
 
@@ -49,7 +52,7 @@ class StockTest {
 
     @Test
     void 可用庫存足夠時可以保留() {
-        var stock = Stock.create(productId, 10);
+        var stock = Stock.create(productId, sku,10);
         stock.reserve(3);
         assertThat(stock.getReserved()).isEqualTo(3);
         assertThat(stock.availableQuantity()).isEqualTo(7);
@@ -57,28 +60,28 @@ class StockTest {
 
     @Test
     void 可用庫存不足時保留拋出InsufficientStockException() {
-        var stock = Stock.create(productId, 5);
+        var stock = Stock.create(productId, sku,5);
         assertThatThrownBy(() -> stock.reserve(6))
                 .isInstanceOf(InsufficientStockException.class);
     }
 
     @Test
     void 零庫存保留任何數量都拋出InsufficientStockException() {
-        var stock = Stock.create(productId, 0);
+        var stock = Stock.create(productId, sku,0);
         assertThatThrownBy(() -> stock.reserve(1))
                 .isInstanceOf(InsufficientStockException.class);
     }
 
     @Test
     void reserve數量為零時拋出InvalidStockReservationException() {
-        var stock = Stock.create(productId, 10);
+        var stock = Stock.create(productId, sku,10);
         assertThatThrownBy(() -> stock.reserve(0))
                 .isInstanceOf(InvalidStockReservationException.class);
     }
 
     @Test
     void reserve負數時拋出InvalidStockReservationException() {
-        var stock = Stock.create(productId, 10);
+        var stock = Stock.create(productId, sku,10);
         assertThatThrownBy(() -> stock.reserve(-1))
                 .isInstanceOf(InvalidStockReservationException.class);
     }
@@ -87,7 +90,7 @@ class StockTest {
 
     @Test
     void 保留量足夠時可以釋放() {
-        var stock = Stock.create(productId, 10);
+        var stock = Stock.create(productId, sku,10);
         stock.reserve(5);
         stock.release(3);
         assertThat(stock.getReserved()).isEqualTo(2);
@@ -96,7 +99,7 @@ class StockTest {
 
     @Test
     void 釋放超過保留量時拋出InvalidReleaseAmountException() {
-        var stock = Stock.create(productId, 10);
+        var stock = Stock.create(productId, sku,10);
         stock.reserve(3);
         assertThatThrownBy(() -> stock.release(4))
                 .isInstanceOf(InvalidReleaseAmountException.class);
@@ -104,7 +107,7 @@ class StockTest {
 
     @Test
     void 無保留量時釋放拋出InvalidReleaseAmountException() {
-        var stock = Stock.create(productId, 10);
+        var stock = Stock.create(productId, sku,10);
         assertThatThrownBy(() -> stock.release(1))
                 .isInstanceOf(InvalidReleaseAmountException.class);
     }
@@ -113,7 +116,7 @@ class StockTest {
 
     @Test
     void 保留量足夠時可以扣除() {
-        var stock = Stock.create(productId, 10);
+        var stock = Stock.create(productId, sku,10);
         stock.reserve(5);
         stock.deduct(5);
         assertThat(stock.getQuantity()).isEqualTo(5);
@@ -122,7 +125,7 @@ class StockTest {
 
     @Test
     void 扣除超過保留量時拋出InvalidDeductAmountException() {
-        var stock = Stock.create(productId, 10);
+        var stock = Stock.create(productId, sku,10);
         stock.reserve(3);
         assertThatThrownBy(() -> stock.deduct(4))
                 .isInstanceOf(InvalidDeductAmountException.class);
@@ -130,7 +133,7 @@ class StockTest {
 
     @Test
     void 無保留量時扣除拋出InvalidDeductAmountException() {
-        var stock = Stock.create(productId, 10);
+        var stock = Stock.create(productId, sku,10);
         assertThatThrownBy(() -> stock.deduct(1))
                 .isInstanceOf(InvalidDeductAmountException.class);
     }
@@ -139,7 +142,7 @@ class StockTest {
 
     @Test
     void 可用庫存等於總量減保留量() {
-        var stock = Stock.create(productId, 10);
+        var stock = Stock.create(productId, sku,10);
         stock.reserve(3);
         assertThat(stock.availableQuantity()).isEqualTo(7);
     }
@@ -148,7 +151,7 @@ class StockTest {
 
     @Test
     void 扣除後庫存歸零時發布StockDepletedEvent() {
-        var stock = Stock.create(productId, 3);
+        var stock = Stock.create(productId, sku,3);
         stock.reserve(3);
         stock.deduct(3);
 
@@ -163,7 +166,7 @@ class StockTest {
 
     @Test
     void 扣除後庫存未歸零時不發布StockDepletedEvent() {
-        var stock = Stock.create(productId, 10);
+        var stock = Stock.create(productId, sku,10);
         stock.reserve(3);
         stock.deduct(3);
         assertThat(stock.getDomainEvents()).isEmpty();

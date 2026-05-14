@@ -8,6 +8,7 @@ import com.example.claudecodeclidemo.catalog.domain.exception.ProductNotFoundExc
 import com.example.claudecodeclidemo.catalog.domain.vo.Money;
 import com.example.claudecodeclidemo.catalog.domain.vo.ProductId;
 import com.example.claudecodeclidemo.catalog.domain.vo.Sku;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -37,6 +38,7 @@ class StockServiceTest {
     @InjectMocks StockService stockService;
 
     private static final Currency TWD = Currency.getInstance("TWD");
+    private static final Sku VALID_SKU = new Sku("PROD-001");
     private final ProductId productId = new ProductId(UUID.randomUUID());
 
     // ── CatalogQueryPort: getPrice ────────────────────────────────────
@@ -70,7 +72,7 @@ class StockServiceTest {
 
     @Test
     void 庫存不足時reserve拋出InsufficientStockException() {
-        var stock = Stock.create(productId, 2);
+        var stock = Stock.create(productId, VALID_SKU,2);
         when(stockRepository.findByProductId(productId)).thenReturn(Optional.of(stock));
 
         assertThatThrownBy(() -> stockService.reserve(productId, 5))
@@ -79,7 +81,7 @@ class StockServiceTest {
 
     @Test
     void 庫存充足時reserve成功並持久化() {
-        var stock = Stock.create(productId, 10);
+        var stock = Stock.create(productId, VALID_SKU,10);
         when(stockRepository.findByProductId(productId)).thenReturn(Optional.of(stock));
         when(stockRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
@@ -92,7 +94,7 @@ class StockServiceTest {
 
     @Test
     void release成功時持久化更新後的庫存() {
-        var stock = Stock.create(productId, 10);
+        var stock = Stock.create(productId, VALID_SKU,10);
         stock.reserve(5);
         when(stockRepository.findByProductId(productId)).thenReturn(Optional.of(stock));
         when(stockRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
@@ -106,7 +108,7 @@ class StockServiceTest {
 
     @Test
     void deduct成功時庫存減少並持久化() {
-        var stock = Stock.create(productId, 10);
+        var stock = Stock.create(productId, VALID_SKU,10);
         stock.reserve(5);
         when(stockRepository.findByProductId(productId)).thenReturn(Optional.of(stock));
         when(stockRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
@@ -119,7 +121,7 @@ class StockServiceTest {
 
     @Test
     void 扣除後庫存歸零時發布StockDepletedEvent() {
-        var stock = Stock.create(productId, 3);
+        var stock = Stock.create(productId, VALID_SKU,3);
         stock.reserve(3);
         when(stockRepository.findByProductId(productId)).thenReturn(Optional.of(stock));
         when(stockRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
