@@ -262,13 +262,14 @@ git commit -m "test: add red tests for [BC名稱] - [功能描述]"
 
 ### 3.1 實作順序
 
+> **範圍**：Domain 層 + Port Interface。Application Service 完整實作保留至 Phase 5。
+
 ```
 1. Value Objects（不可變，含驗證）
 2. Domain Exceptions（對應 Invariant 清單）
 3. Domain Entities / Aggregate Root（含狀態機、不變量守衛）
 4. Domain Events（record / immutable class）
 5. Port Interfaces（application/port/in, application/port/out）
-6. Application Service（Use Case 實作，注入 Port Out）
 ```
 
 ### 3.2 Domain 層純度守則（ddd plugin rules）
@@ -347,7 +348,7 @@ git commit -m "feat: implement [BC名稱] domain layer - [功能描述]"
 
 ## Phase 4：🔵 Refactor（重構，測試保持綠燈）
 
-> **DDD Rule**：`domain-specific-naming`、`function-file-size-limits`、`early-return-pattern`、`explicit-control-flow`
+> **DDD Rule**：`domain-specific-naming`、`function-file-size-limits`、`early-return-pattern`、`explicit-control-flow`、`command-query-separation`
 
 ### 4.1 重構檢查清單
 
@@ -408,9 +409,9 @@ git commit -m "refactor: clean up [BC名稱] domain layer"
 
 ---
 
-## Phase 5：Application Layer 實作
+## Phase 5：Application Layer 完整實作
 
-> **目標**：Use Case 串接 Domain 與 Port Out，協調跨 Aggregate 操作。
+> **目標**：Phase 3 僅建立 Port Interface；此 Phase 完整實作 Application Service，加上 Spring 事務邊界、事件發布與完整測試覆蓋。
 
 ### 5.1 Application Service 範本
 

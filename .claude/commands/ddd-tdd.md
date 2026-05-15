@@ -67,8 +67,10 @@ com.example.claudecodeclidemo.$ARGUMENTS/
 │       ├── in/
 │       └── out/
 └── adapter/
-    ├── in/web/
-    └── out/persistence/
+    ├── in/
+    │   └── web/
+    └── out/
+        └── persistence/
 ```
 
 列出所有將要建立的 class 清單（含型別：Aggregate Root / Entity / VO / UseCase / Port / Event / Exception）。
@@ -79,7 +81,7 @@ com.example.claudecodeclidemo.$ARGUMENTS/
 
 ## Phase 2：Red（寫測試，必須 FAIL）
 
-**使用 `ecc:springboot-tdd` skill 指引。**
+**使用 `ecc:tdd-workflow` skill 指引。**
 
 依序撰寫：
 1. Value Object 單元測試
@@ -107,7 +109,9 @@ git commit -m "test: add red tests for $ARGUMENTS"
 
 ## Phase 3：Green（最小實作通過測試）
 
-**`ddd` plugin 規則強制：Domain 層只允許 `java.*` import，禁止 Spring / JPA。**
+**`ddd` plugin 規則強制（`functional-core-imperative-shell`）：Domain 層只允許 `java.*` import，禁止 Spring / JPA。**
+
+> **範圍**：Domain 層 + Port Interface。Application Service 完整實作保留至 Phase 5。
 
 依序實作：
 1. Value Objects（含驗證、equals、hashCode）
@@ -115,7 +119,6 @@ git commit -m "test: add red tests for $ARGUMENTS"
 3. Domain Entities / Aggregate Root（含狀態機、不變量守衛）
 4. Domain Events（immutable record/class，含 `occurredAt`）
 5. Port Interfaces（`application/port/in` 和 `application/port/out`）
-6. Application Service（Use Case 實作，注入 Port Out）
 
 實作完畢後執行：
 ```bash
@@ -160,16 +163,20 @@ git commit -m "refactor: clean up $ARGUMENTS domain layer"
 
 ---
 
-## Phase 5：Application Layer
+## Phase 5：Application Layer 完整實作
+
+> Phase 3 僅建立 Port Interface；**Application Service 的完整實作在此 Phase 進行。**
 
 實作 Application Service：
-- `@Service @Transactional`
+- `@Service @Transactional`（事務邊界在此層）
 - implements UseCase Interface
 - 注入 Port Out（Repository、外部 Port）
 - 協調：呼叫 Port Out → 建立 Aggregate → 持久化 → 發布 Domain Event
 - **Service 本身不含業務邏輯**
 
-補充 Application Layer 測試（Mock Port Out，不啟動 Spring context）。
+補充 Application Layer 完整測試（`@ExtendWith(MockitoExtension.class)`，Mock Port Out，不啟動 Spring context）。
+
+詳細範本見 `docs/agent-workflow-ddd-tdd.md` §5.1–5.3。
 
 ---
 
