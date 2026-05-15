@@ -182,7 +182,6 @@ class MoneyTest {
 
 #### Domain Entity 不變量測試
 ```java
-@ExtendWith(MockitoExtension.class)
 class OrderTest {
     @Test
     void cannotCreateOrderWithoutLines() {
@@ -306,6 +305,9 @@ public final class Money {
     private final Currency currency;
 
     public Money(BigDecimal amount, Currency currency) {
+        if (amount == null || currency == null) {
+            throw new IllegalArgumentException("amount and currency must not be null");
+        }
         if (amount.compareTo(BigDecimal.ZERO) < 0) {
             throw new InvalidPriceException(amount);
         }
@@ -512,10 +514,10 @@ class OrderController {
 
 **Controller 單元測試（MockMvc）**
 ```java
-@WebMvcTest(OrderController.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 class OrderControllerTest {
-    @Autowired MockMvc mockMvc;
-    @MockBean CreateOrderUseCase createOrderUseCase;
+    @Autowired WebApplicationContext context;
+    @MockitoBean CreateOrderUseCase createOrderUseCase;
 
     @Test
     void createOrderReturns201() throws Exception {
@@ -714,7 +716,7 @@ grep -r "import jakarta.persistence" src/main/java/com/example/claudecodeclidemo
 | command-query-separation | ✅ PASS | |
 | separation-of-concerns | ✅ PASS | |
 | explicit-side-effects | ✅ PASS | |
-
+```
 
 ---
 
