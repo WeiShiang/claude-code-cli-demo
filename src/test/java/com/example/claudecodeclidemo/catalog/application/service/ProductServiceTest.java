@@ -1,7 +1,7 @@
 package com.example.claudecodeclidemo.catalog.application.service;
 
 import com.example.claudecodeclidemo.catalog.application.port.in.CreateProductCommand;
-import com.example.claudecodeclidemo.catalog.application.port.out.CategoryExistsPort;
+import com.example.claudecodeclidemo.catalog.application.port.out.CategoryRepository;
 import com.example.claudecodeclidemo.catalog.application.port.out.ProductRepository;
 import com.example.claudecodeclidemo.catalog.application.port.out.StockRepository;
 import com.example.claudecodeclidemo.catalog.domain.entity.Product;
@@ -36,7 +36,7 @@ class ProductServiceTest {
 
     @Mock ProductRepository productRepository;
     @Mock StockRepository stockRepository;
-    @Mock CategoryExistsPort categoryExistsPort;
+    @Mock CategoryRepository categoryRepository;
     @Mock ApplicationEventPublisher eventPublisher;
 
     @InjectMocks ProductService productService;
@@ -65,7 +65,7 @@ class ProductServiceTest {
     void 分類不存在時拋出CategoryNotFoundException() {
         var command = new CreateProductCommand("測試商品", VALID_SKU, VALID_PRICE, VALID_CATEGORY);
         when(productRepository.findBySku(VALID_SKU)).thenReturn(Optional.empty());
-        when(categoryExistsPort.exists(VALID_CATEGORY)).thenReturn(false);
+        when(categoryRepository.exists(VALID_CATEGORY)).thenReturn(false);
 
         assertThatThrownBy(() -> productService.createProduct(command))
                 .isInstanceOf(CategoryNotFoundException.class);
@@ -79,7 +79,7 @@ class ProductServiceTest {
     void 合法命令成功建立商品並初始化庫存() {
         var command = new CreateProductCommand("測試商品", VALID_SKU, VALID_PRICE, VALID_CATEGORY);
         when(productRepository.findBySku(VALID_SKU)).thenReturn(Optional.empty());
-        when(categoryExistsPort.exists(VALID_CATEGORY)).thenReturn(true);
+        when(categoryRepository.exists(VALID_CATEGORY)).thenReturn(true);
         when(productRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(stockRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
@@ -95,7 +95,7 @@ class ProductServiceTest {
     void 建立商品後庫存初始為零() {
         var command = new CreateProductCommand("測試商品", VALID_SKU, VALID_PRICE, VALID_CATEGORY);
         when(productRepository.findBySku(VALID_SKU)).thenReturn(Optional.empty());
-        when(categoryExistsPort.exists(VALID_CATEGORY)).thenReturn(true);
+        when(categoryRepository.exists(VALID_CATEGORY)).thenReturn(true);
         when(productRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(stockRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 

@@ -77,7 +77,7 @@
 
 ### Ports
 - **In**: `CreateProductUseCase`、`UpdateStockUseCase`、`QueryProductUseCase`
-- **Out**: `ProductRepository`、`StockRepository`
+- **Out**: `ProductRepository`、`StockRepository`、`CategoryRepository`
 - **Provided to others**: `CatalogQueryPort`（Cart 用）、`StockReservationPort`（Order 用）
 
 ---

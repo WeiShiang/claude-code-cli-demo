@@ -1,11 +1,11 @@
 package com.example.claudecodeclidemo.catalog.adapter.out.persistence;
 
-import com.example.claudecodeclidemo.catalog.application.port.out.CategoryExistsPort;
+import com.example.claudecodeclidemo.catalog.application.port.out.CategoryRepository;
 import com.example.claudecodeclidemo.catalog.domain.vo.CategoryId;
 import org.springframework.stereotype.Component;
 
 @Component
-class CategoryExistsAdapter implements CategoryExistsPort {
+class CategoryExistsAdapter implements CategoryRepository {
 
     private final CategoryJpaRepository jpa;
 

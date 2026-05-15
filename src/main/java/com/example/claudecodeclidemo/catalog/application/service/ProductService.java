@@ -3,7 +3,7 @@ package com.example.claudecodeclidemo.catalog.application.service;
 import com.example.claudecodeclidemo.catalog.application.port.in.CreateProductCommand;
 import com.example.claudecodeclidemo.catalog.application.port.in.CreateProductUseCase;
 import com.example.claudecodeclidemo.catalog.application.port.in.QueryProductUseCase;
-import com.example.claudecodeclidemo.catalog.application.port.out.CategoryExistsPort;
+import com.example.claudecodeclidemo.catalog.application.port.out.CategoryRepository;
 import com.example.claudecodeclidemo.catalog.application.port.out.ProductRepository;
 import com.example.claudecodeclidemo.catalog.application.port.out.StockRepository;
 import com.example.claudecodeclidemo.catalog.domain.entity.Product;
@@ -22,16 +22,16 @@ public class ProductService implements CreateProductUseCase, QueryProductUseCase
 
     private final ProductRepository productRepository;
     private final StockRepository stockRepository;
-    private final CategoryExistsPort categoryExistsPort;
+    private final CategoryRepository categoryRepository;
     private final ApplicationEventPublisher eventPublisher;
 
     public ProductService(ProductRepository productRepository,
                           StockRepository stockRepository,
-                          CategoryExistsPort categoryExistsPort,
+                          CategoryRepository categoryRepository,
                           ApplicationEventPublisher eventPublisher) {
         this.productRepository = productRepository;
         this.stockRepository = stockRepository;
-        this.categoryExistsPort = categoryExistsPort;
+        this.categoryRepository = categoryRepository;
         this.eventPublisher = eventPublisher;
     }
 
@@ -40,7 +40,7 @@ public class ProductService implements CreateProductUseCase, QueryProductUseCase
         if (productRepository.findBySku(command.sku()).isPresent()) {
             throw new DuplicateSkuException(command.sku());
         }
-        if (!categoryExistsPort.exists(command.categoryId())) {
+        if (!categoryRepository.exists(command.categoryId())) {
             throw new CategoryNotFoundException(command.categoryId());
         }
         var product = Product.create(command.name(), command.sku(), command.price(), command.categoryId());

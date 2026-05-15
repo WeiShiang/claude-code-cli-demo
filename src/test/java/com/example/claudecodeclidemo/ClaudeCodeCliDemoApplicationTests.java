@@ -1,6 +1,6 @@
 package com.example.claudecodeclidemo;
 
-import com.example.claudecodeclidemo.catalog.application.port.out.CategoryExistsPort;
+import com.example.claudecodeclidemo.catalog.application.port.out.CategoryRepository;
 import com.example.claudecodeclidemo.catalog.application.port.out.ProductRepository;
 import com.example.claudecodeclidemo.catalog.application.port.out.StockRepository;
 import org.junit.jupiter.api.Test;
@@ -12,7 +12,7 @@ class ClaudeCodeCliDemoApplicationTests {
 
 	@MockitoBean ProductRepository productRepository;
 	@MockitoBean StockRepository stockRepository;
-	@MockitoBean CategoryExistsPort categoryExistsPort;
+	@MockitoBean CategoryRepository categoryRepository;
 
 	@Test
 	void contextLoads() {
