@@ -29,6 +29,8 @@
 |---|---|---|
 | **購物車** | Cart | 使用者暫存欲購商品的容器，每人唯一 |
 | **購物車品項** | CartItem | 購物車中的單一商品記錄，含商品 ID、數量、單價快照 |
+| **購物車品項 ID** | CartItemId | CartItem 的唯一識別值（UUID） |
+| **購物車品項快照** | CartItemSnapshot | 結帳當下的 CartItem 不可變記錄，用於 `CartCheckedOutEvent`；含 `productId`、`quantity`、`unitPrice` |
 | **數量** | Quantity | 品項的購買數量，最小值為 1 |
 | **單價快照** | Unit Price Snapshot | 加入購物車時的定價快照；結帳前會重新向 Catalog 確認 |
 | **小計** | Subtotal | 購物車內所有品項的金額加總 |
@@ -45,6 +47,9 @@
 |---|---|---|
 | **訂單** | Order | 使用者結帳後建立的購買契約，含訂單明細與狀態 |
 | **訂單明細** | OrderLine | 訂單中每一個商品的購買記錄（含定價快照，下單後不隨商品定價變動） |
+| **訂單明細 ID** | OrderLineId | OrderLine 的唯一識別值（UUID） |
+| **訂單明細快照** | OrderLineSnapshot | 建立訂單當下的 OrderLine 不可變記錄，用於 `OrderCreatedEvent`、`OrderPaidEvent`；含 `productId`、`productName`、`quantity`、`unitPrice` |
+| **取消原因** | CancellationReason | 訂單取消的原因分類：`USER_REQUEST`（使用者主動）/ `PAYMENT_FAILED`（付款失敗）/ `SYSTEM`（系統處理） |
 | **訂單狀態** | OrderStatus | 訂單的生命週期狀態（見下方狀態機） |
 | **建立** | CREATED | 訂單剛建立，庫存已保留，等待付款 |
 | **已付款** | PAID | 付款成功，庫存正式扣除 |

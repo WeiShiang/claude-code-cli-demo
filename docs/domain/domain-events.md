@@ -150,38 +150,41 @@
 
 ## 事件流全覽
 
+> **架構說明**：Port 呼叫（`StockReservationPort`、`OrderCheckoutPort`、`PaymentPort`）  
+> 發生在 **Application Service** 層，而非 Domain Entity 內部。  
+> Domain Entity 只負責業務邏輯與發出 Domain Event；副作用由 Application Service 協調。
+
 ```
 使用者結帳
     │
     ▼
-Cart.checkout()
-    ├─► [CartCheckedOutEvent]
-    └─► OrderCheckoutPort.createOrder()
-            │
-            ▼
-        Order.create()
-            ├─► [OrderCreatedEvent]
-            └─► StockReservationPort.reserve()
-                        │
-                        ▼
-                    PaymentPort.initiate()
-                        │
-                        ▼
-                    Payment.create()
-                        │
-              ┌─────────┴──────────┐
-              ▼                    ▼
-       [PaymentSucceeded]   [PaymentFailed]
-              │                    │
-              ▼                    ▼
-       Order → PAID          Order → CANCELLED
-              │                    │
-    ┌─────────┘              ┌─────┘
-    ▼                        ▼
-[OrderPaidEvent]     [OrderCancelledEvent]
-    │                        │
-    ▼                        ▼
-Stock.deduct()          Stock.release()
+CheckoutService.checkout()          ← Application Service（協調者）
+    ├─► CatalogQueryPort.check()    ← Port Out 呼叫（C-5 商品可用性驗證）
+    ├─► cart.checkout()             ← Domain 操作（C-4 空車驗證 + 發出 CartCheckedOutEvent）
+    ├─► OrderCheckoutPort.createOrder()  ← Port Out 呼叫
+    └─► [CartCheckedOutEvent]
+
+CreateOrderService.createOrder()    ← Application Service（協調者）
+    ├─► StockReservationPort.reserve()  ← Port Out 呼叫（先保留庫存）
+    ├─► Order.create()              ← Domain 操作（發出 OrderCreatedEvent）
+    ├─► OrderRepository.save()      ← Port Out 呼叫
+    ├─► PaymentPort.initiate()      ← Port Out 呼叫（發起付款）
+    └─► [OrderCreatedEvent]
+
+Payment.process()                   ← Domain 操作
+    │
+    ├── 成功 → [PaymentSucceededEvent]
+    └── 失敗 → [PaymentFailedEvent]
+
+PaymentEventHandler.on(PaymentSucceededEvent)   ← Event Listener
+    ├─► order.markAsPaid()          ← Domain 操作（發出 OrderPaidEvent）
+    ├─► StockReservationPort.deduct()  ← Port Out 呼叫
+    └─► [OrderPaidEvent]
+
+PaymentEventHandler.on(PaymentFailedEvent)      ← Event Listener
+    ├─► order.cancel()              ← Domain 操作（發出 OrderCancelledEvent）
+    ├─► StockReservationPort.release()  ← Port Out 呼叫
+    └─► [OrderCancelledEvent]
 ```
 
 ---
@@ -206,10 +209,3 @@ public void on(PaymentSucceededEvent event) {
 - v2 升 Kafka 時，只需替換 `ApplicationEventPublisher` 的 adapter 實作，Use Case 不改
 
 ---
-
-## 事件 Schema 演進規則
-
-1. **欄位只增不刪** — 消費者可能依賴舊欄位
-2. **新增可選欄位**時需提供預設值
-3. 若需移除欄位，先標記 `@Deprecated` 並在 `ubiquitous-language.md` 記錄棄用時間軸
-4. 版本化事件名稱（例：`OrderCreatedV2Event`）只在欄位語意有 breaking change 時使用

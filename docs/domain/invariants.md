@@ -10,14 +10,14 @@
 
 ### Product Invariants
 
-| # | 規則 | 違反時拋出 |
-|---|---|---|
-| P-1 | 商品名稱不可為空白或空字串 | `InvalidProductNameException` |
-| P-2 | 定價 (`price`) 必須 ≥ 0（可以免費，不可為負） | `InvalidPriceException` |
-| P-3 | SKU 格式必須符合 `[A-Z0-9-]{4,20}` | `InvalidSkuException` |
-| P-4 | SKU 在系統內必須唯一 | `DuplicateSkuException` |
-| P-5 | `DISCONTINUED` 的商品不可被重新上架（`ACTIVE`） | `InvalidProductStateTransitionException` |
-| P-6 | `CategoryId` 必須指向一個已存在的分類 | `CategoryNotFoundException` |
+| # | 規則 | 違反時拋出 | 執行層 |
+|---|---|---|---|
+| P-1 | 商品名稱不可為空白或空字串 | `InvalidProductNameException` | Aggregate Root |
+| P-2 | 定價 (`price`) 必須 ≥ 0（可以免費，不可為負） | `InvalidPriceException` | Aggregate Root |
+| P-3 | SKU 格式必須符合 `[A-Z0-9-]{4,20}` | `InvalidSkuException` | Aggregate Root（VO 驗證） |
+| P-4 | SKU 在系統內必須唯一 | `DuplicateSkuException` | **Application Service**（需 Repository 查詢，Aggregate Root 無法獨立執行） |
+| P-5 | `DISCONTINUED` 的商品不可被重新上架（`ACTIVE`） | `InvalidProductStateTransitionException` | Aggregate Root |
+| P-6 | `CategoryId` 必須指向一個已存在的分類 | `CategoryNotFoundException` | **Application Service**（需 Repository 查詢，Aggregate Root 無法獨立執行） |
 
 ### Stock Invariants
 
@@ -57,7 +57,7 @@
 | O-4 | 狀態轉換必須符合合法路徑（見狀態機） | `InvalidOrderStateTransitionException` |
 | O-5 | 只有 `CREATED` 狀態的訂單可以被取消（使用者主動） | `OrderCancellationNotAllowedException` |
 | O-6 | OrderLine 的 `unitPrice` 與 `productName` 在建立後不可被修改（快照） | *(由 immutable fields 保證)* |
-| O-7 | 同一筆訂單不可重複付款（`PAID` 狀態收到 `PaymentSucceededEvent` 應忽略） | `DuplicatePaymentException` |
+| O-7 | 同一筆訂單不可重複付款（`PAID` 狀態收到 `PaymentSucceededEvent` 應忽略） | `OrderAlreadyPaidException` |
 
 ### OrderLine Invariants
 

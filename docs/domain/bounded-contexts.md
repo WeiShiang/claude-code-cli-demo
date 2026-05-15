@@ -70,6 +70,13 @@
 | quantity | `int` | 現有庫存（≥ 0） |
 | reserved | `int` | 已保留量（≥ 0，≤ quantity） |
 
+#### Category (Aggregate Root)
+| 欄位 | 型別 | 說明 |
+|---|---|---|
+| id | `CategoryId` | 全域唯一識別 |
+| name | `String` | 分類名稱 |
+| parentId | `CategoryId?` | 上層分類（根節點為 null） |
+
 ### Value Objects
 - `Money(amount: BigDecimal, currency: Currency)` — 貨幣金額，不可變
 - `Sku(value: String)` — 格式 `[A-Z0-9-]{4,20}`
@@ -154,9 +161,9 @@
 - `Money(amount, currency)`
 
 ### Domain Events 發出
-- `OrderCreated`
-- `OrderPaid`
-- `OrderCancelled`
+- `OrderCreatedEvent`
+- `OrderPaidEvent`
+- `OrderCancelledEvent`
 
 ### Ports
 - **In**: `CreateOrderUseCase`（= `OrderCheckoutPort`）、`CancelOrderUseCase`
@@ -207,8 +214,7 @@
 | Catalog | Cart | Open Host Service | `CatalogQueryPort` interface（Cart adapter 實作） |
 | Catalog | Order | Customer / Supplier | `StockReservationPort` interface |
 | Cart | Order | Customer / Supplier | `OrderCheckoutPort` interface |
-| Order | Payment | Partnership | `PaymentPort` interface + Domain Events |
-| Payment | Order | Partnership | `PaymentSucceededEvent` / `PaymentFailedEvent` |
+| Order ↔ Payment | — | Partnership | `PaymentPort` interface（同步呼叫）+ `PaymentSucceededEvent` / `PaymentFailedEvent`（非同步回呼） |
 
 ### 邊界守則
 1. 跨 BC **不能直接 import** 對方的 domain 物件
