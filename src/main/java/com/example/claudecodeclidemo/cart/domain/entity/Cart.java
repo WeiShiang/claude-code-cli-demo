@@ -47,10 +47,11 @@ public class Cart extends AggregateRoot {
         var existing = findItem(productId);
         if (existing != null) {
             existing.addQuantity(quantity);
-        } else {
-            if (items.size() >= MAX_ITEMS) throw new CartItemLimitExceededException();
-            items.add(CartItem.create(productId, quantity, unitPrice));
+            this.updatedAt = Instant.now();
+            return;
         }
+        if (items.size() >= MAX_ITEMS) throw new CartItemLimitExceededException();
+        items.add(CartItem.create(productId, quantity, unitPrice));
         this.updatedAt = Instant.now();
     }
 
