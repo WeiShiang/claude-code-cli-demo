@@ -10,7 +10,7 @@
 ## 啟動前置
 
 1. 確認 BC 名稱有效（catalog / cart / order / payment）。若無效或未提供，停止並請使用者重新輸入。
-2. `ddd@NeoLabHQ/context-engineering-kit` plugin 規則已自動附加到 context（14 條編碼規則）。
+2. `ddd@context-engineering-kit` plugin 規則已自動附加到 context
 
 ---
 
@@ -215,7 +215,7 @@ git commit -m "refactor: clean up $ARGUMENTS domain layer"
 - 實作摘要（Aggregate、UseCase、Domain Event 清單）
 - TDD 循環記錄（每個循環的 RED / GREEN / REFACTOR commit hash）
 - 覆蓋率數字（domain / application / adapter / 整體）
-- DDD Rules 合規結果（14 條規則各自 PASS / FAIL）
+- DDD Rules 合規結果（規則各自 PASS / FAIL）
 - 已知限制與後續待辦
 
 ---

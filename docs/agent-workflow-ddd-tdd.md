@@ -1,8 +1,8 @@
 # Agent Workflow — DDD + TDD 購物商城開發
 
 > **適用工具**：Claude Code CLI  
-> **Plugin**：`ddd@NeoLabHQ/context-engineering-kit`（14 條編碼規則）  
-> **Skills**：`ecc:springboot-tdd`、`ecc:tdd-workflow`  
+> **Plugin**：`ddd@context-engineering-kit`
+> **Skills**：`ecc:tdd-workflow`  
 > **DDD 文件**：`docs/domain/bounded-contexts.md`、`docs/domain/ubiquitous-language.md`、`docs/domain/invariants.md`、`docs/domain/domain-events.md`
 
 ---
@@ -54,7 +54,7 @@
 ## Phase 0：DDD 分析
 
 > **目標**：從 4 份 DDD 文件萃取本次開發 BC 的所有設計約束。  
-> **Plugin 啟用**：`ddd@NeoLabHQ/context-engineering-kit`（規則自動附加到 context）
+> **Plugin 啟用**：`ddd@context-engineering-kit`（規則自動附加到 context）
 
 ### 0.1 讀取文件
 
@@ -148,7 +148,7 @@ com.example.claudecodeclidemo.<bc>/
 
 ## Phase 2：🔴 Red（寫測試，必須 FAIL）
 
-> **Skill**：`ecc:springboot-tdd` + `ecc:tdd-workflow`  
+> **Skill**：`ecc:tdd-workflow`  
 > **規則**：未確認 RED 前，不得修改任何 production code
 
 ### 2.1 測試撰寫優先順序
@@ -166,13 +166,13 @@ com.example.claudecodeclidemo.<bc>/
 ```java
 class MoneyTest {
     @Test
-    void 金額不可為負數() {
+    void amountMustNotBeNegative() {
         assertThatThrownBy(() -> new Money(new BigDecimal("-1"), Currency.TWD))
             .isInstanceOf(InvalidPriceException.class);
     }
 
     @Test
-    void 相同金額與幣別的Money相等() {
+    void moneyWithSameAmountAndCurrencyAreEqual() {
         var a = new Money(new BigDecimal("100"), Currency.TWD);
         var b = new Money(new BigDecimal("100"), Currency.TWD);
         assertThat(a).isEqualTo(b);
@@ -185,27 +185,27 @@ class MoneyTest {
 @ExtendWith(MockitoExtension.class)
 class OrderTest {
     @Test
-    void 無訂單明細時不可建立訂單() {
+    void cannotCreateOrderWithoutLines() {
         assertThatThrownBy(() -> Order.create(userId, List.of()))
             .isInstanceOf(EmptyOrderException.class);
     }
 
     @Test
-    void CREATED狀態可取消() {
+    void createdOrderCanBeCancelled() {
         var order = OrderTestBuilder.aCreatedOrder().build();
         order.cancel(CancellationReason.USER_REQUEST);
         assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELLED);
     }
 
     @Test
-    void PAID狀態不可由使用者取消() {
+    void paidOrderCannotBeCancelledByUser() {
         var order = OrderTestBuilder.aPaidOrder().build();
         assertThatThrownBy(() -> order.cancel(CancellationReason.USER_REQUEST))
             .isInstanceOf(OrderCancellationNotAllowedException.class);
     }
 
     @Test
-    void 建立訂單時發布OrderCreatedEvent() {
+    void publishesOrderCreatedEventOnCreate() {
         var order = Order.create(userId, List.of(aLine()));
         assertThat(order.getDomainEvents())
             .hasSize(1)
@@ -223,7 +223,7 @@ class CreateOrderUseCaseTest {
     @InjectMocks CreateOrderService createOrderService;
 
     @Test
-    void 成功建立訂單並保留庫存() {
+    void successfullyCreatesOrderAndReservesStock() {
         // Arrange
         var command = new CreateOrderCommand(userId, List.of(anItem()));
         when(orderRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
@@ -469,7 +469,7 @@ class CreateOrderServiceTest {
     @InjectMocks CreateOrderService service;
 
     @Test
-    void 庫存不足時拋出例外並不建立訂單() {
+    void throwsExceptionAndDoesNotSaveOrderWhenStockInsufficient() {
         doThrow(InsufficientStockException.class)
             .when(stockReservationPort).reserve(any(), anyInt());
 
@@ -518,7 +518,7 @@ class OrderControllerTest {
     @MockBean CreateOrderUseCase createOrderUseCase;
 
     @Test
-    void 建立訂單回傳201() throws Exception {
+    void createOrderReturns201() throws Exception {
         when(createOrderUseCase.createOrder(any()))
             .thenReturn(new OrderId(UUID.randomUUID()));
 
@@ -590,7 +590,7 @@ class OrderIntegrationTest {
     @Autowired MockMvc mockMvc;
 
     @Test
-    void 建立訂單完整流程() throws Exception {
+    void createOrderFullFlow() throws Exception {
         mockMvc.perform(post("/api/orders")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
@@ -715,12 +715,6 @@ grep -r "import jakarta.persistence" src/main/java/com/example/claudecodeclidemo
 | separation-of-concerns | ✅ PASS | |
 | explicit-side-effects | ✅ PASS | |
 
----
-
-## 已知限制 / 後續待辦
-
-- [ ] ...
-```
 
 ---
 
@@ -742,9 +736,8 @@ grep -r "import jakarta.persistence" src/main/java/com/example/claudecodeclidemo
 | 時機 | Skill / Plugin |
 |---|---|
 | 進入任何 BC 開發 | `ddd` plugin 自動生效（規則附加到 context） |
-| Phase 2 ~ 4（TDD 循環） | `/ecc:springboot-tdd` |
+| Phase 2 ~ 4（TDD 循環） | `/ecc:tdd-workflow` |
 | 全域 TDD 規範確認 | `/ecc:tdd-workflow` |
-| 架構設計決策 | `/ecc:hexagonal-architecture` |
 | 程式碼 review | `/ecc:code-review` |
 | 安全性檢查 | `/ecc:security-review` |
 | Coverage 不足修補 | `/ecc:test-coverage` |
