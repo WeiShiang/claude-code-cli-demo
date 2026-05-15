@@ -2,6 +2,7 @@ package com.example.claudecodeclidemo.cart.domain.entity;
 
 import com.example.claudecodeclidemo.cart.domain.event.CartCheckedOutEvent;
 import com.example.claudecodeclidemo.cart.domain.exception.CartItemLimitExceededException;
+import com.example.claudecodeclidemo.cart.domain.exception.CartItemNotFoundException;
 import com.example.claudecodeclidemo.cart.domain.exception.EmptyCartException;
 import com.example.claudecodeclidemo.cart.domain.vo.Money;
 import com.example.claudecodeclidemo.cart.domain.vo.OrderId;
@@ -73,6 +74,14 @@ class CartTest {
         cart.addItem(PRODUCT_A, QTY_1, PRICE);
         cart.updateItemQuantity(PRODUCT_A, new Quantity(5));
         assertThat(cart.getItems().get(0).getQuantity()).isEqualTo(new Quantity(5));
+    }
+
+    @Test
+    void updateItemQuantity_productNotInCart_throwsCartItemNotFoundException() {
+        var cart = Cart.create(USER_ID);
+        cart.addItem(PRODUCT_A, QTY_1, PRICE);
+        assertThatThrownBy(() -> cart.updateItemQuantity(PRODUCT_B, new Quantity(3)))
+                .isInstanceOf(CartItemNotFoundException.class);
     }
 
     // ── removeItem ────────────────────────────────────────────────────────

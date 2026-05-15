@@ -3,6 +3,7 @@ package com.example.claudecodeclidemo.cart.domain.entity;
 import com.example.claudecodeclidemo.cart.domain.event.CartCheckedOutEvent;
 import com.example.claudecodeclidemo.cart.domain.event.CartItemSnapshot;
 import com.example.claudecodeclidemo.cart.domain.exception.CartItemLimitExceededException;
+import com.example.claudecodeclidemo.cart.domain.exception.CartItemNotFoundException;
 import com.example.claudecodeclidemo.cart.domain.exception.EmptyCartException;
 import com.example.claudecodeclidemo.cart.domain.vo.CartId;
 import com.example.claudecodeclidemo.cart.domain.vo.Money;
@@ -57,10 +58,9 @@ public class Cart extends AggregateRoot {
 
     public void updateItemQuantity(ProductId productId, Quantity quantity) {
         var item = findItem(productId);
-        if (item != null) {
-            item.updateQuantity(quantity);
-            this.updatedAt = Instant.now();
-        }
+        if (item == null) throw new CartItemNotFoundException(productId);
+        item.updateQuantity(quantity);
+        this.updatedAt = Instant.now();
     }
 
     public void removeItem(ProductId productId) {

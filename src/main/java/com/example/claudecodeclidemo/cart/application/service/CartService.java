@@ -13,9 +13,11 @@ import com.example.claudecodeclidemo.cart.application.port.out.CatalogQueryPort;
 import com.example.claudecodeclidemo.cart.application.port.out.OrderCheckoutPort;
 import com.example.claudecodeclidemo.cart.domain.entity.Cart;
 import com.example.claudecodeclidemo.cart.domain.event.CartItemSnapshot;
+import com.example.claudecodeclidemo.cart.domain.exception.CartNotFoundException;
 import com.example.claudecodeclidemo.cart.domain.exception.EmptyCartException;
 import com.example.claudecodeclidemo.cart.domain.exception.ProductNotAvailableException;
 import com.example.claudecodeclidemo.cart.domain.vo.OrderId;
+import com.example.claudecodeclidemo.cart.domain.vo.UserId;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,21 +54,21 @@ public class CartService implements AddItemUseCase, UpdateItemUseCase, RemoveIte
 
     @Override
     public void updateItem(UpdateItemCommand command) {
-        var cart = cartRepository.findByUserId(command.userId()).orElseThrow();
+        var cart = loadCart(command.userId());
         cart.updateItemQuantity(command.productId(), command.quantity());
         cartRepository.save(cart);
     }
 
     @Override
     public void removeItem(RemoveItemCommand command) {
-        var cart = cartRepository.findByUserId(command.userId()).orElseThrow();
+        var cart = loadCart(command.userId());
         cart.removeItem(command.productId());
         cartRepository.save(cart);
     }
 
     @Override
     public OrderId checkout(CheckoutCommand command) {
-        var cart = cartRepository.findByUserId(command.userId()).orElseThrow();
+        var cart = loadCart(command.userId());
         if (cart.getItems().isEmpty()) throw new EmptyCartException();
         validateAllProductsActive(cart);
         var snapshots = buildSnapshots(cart);
@@ -76,6 +78,11 @@ public class CartService implements AddItemUseCase, UpdateItemUseCase, RemoveIte
         cart.getDomainEvents().forEach(eventPublisher::publishEvent);
         cart.clearDomainEvents();
         return orderId;
+    }
+
+    private Cart loadCart(UserId userId) {
+        return cartRepository.findByUserId(userId)
+                .orElseThrow(() -> new CartNotFoundException(userId));
     }
 
     private void validateAllProductsActive(Cart cart) {

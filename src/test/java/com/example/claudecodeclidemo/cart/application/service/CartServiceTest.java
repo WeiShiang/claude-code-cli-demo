@@ -2,11 +2,14 @@ package com.example.claudecodeclidemo.cart.application.service;
 
 import com.example.claudecodeclidemo.cart.application.port.in.AddItemCommand;
 import com.example.claudecodeclidemo.cart.application.port.in.CheckoutCommand;
+import com.example.claudecodeclidemo.cart.application.port.in.RemoveItemCommand;
+import com.example.claudecodeclidemo.cart.application.port.in.UpdateItemCommand;
 import com.example.claudecodeclidemo.cart.application.port.out.CartRepository;
 import com.example.claudecodeclidemo.cart.application.port.out.CatalogQueryPort;
 import com.example.claudecodeclidemo.cart.application.port.out.OrderCheckoutPort;
 import com.example.claudecodeclidemo.cart.domain.entity.Cart;
 import com.example.claudecodeclidemo.cart.domain.event.CartCheckedOutEvent;
+import com.example.claudecodeclidemo.cart.domain.exception.CartNotFoundException;
 import com.example.claudecodeclidemo.cart.domain.exception.EmptyCartException;
 import com.example.claudecodeclidemo.cart.domain.exception.ProductNotAvailableException;
 import com.example.claudecodeclidemo.cart.domain.vo.Money;
@@ -125,5 +128,33 @@ class CartServiceTest {
         cartService.checkout(new CheckoutCommand(USER_ID));
 
         verify(cartRepository).save(argThat(c -> c.getItems().isEmpty()));
+    }
+
+    // ── A：typed exception ────────────────────────────────────────────────
+
+    @Test
+    void updateItem_cartNotFound_throwsCartNotFoundException() {
+        when(cartRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> cartService.updateItem(
+                new UpdateItemCommand(USER_ID, PRODUCT_A, new Quantity(2))))
+                .isInstanceOf(CartNotFoundException.class);
+    }
+
+    @Test
+    void removeItem_cartNotFound_throwsCartNotFoundException() {
+        when(cartRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> cartService.removeItem(
+                new RemoveItemCommand(USER_ID, PRODUCT_A)))
+                .isInstanceOf(CartNotFoundException.class);
+    }
+
+    @Test
+    void checkout_cartNotFound_throwsCartNotFoundException() {
+        when(cartRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> cartService.checkout(new CheckoutCommand(USER_ID)))
+                .isInstanceOf(CartNotFoundException.class);
     }
 }

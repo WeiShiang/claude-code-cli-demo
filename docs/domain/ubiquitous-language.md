@@ -31,7 +31,7 @@
 | **購物車品項** | CartItem | 購物車中的單一商品記錄，含商品 ID、數量、單價快照 |
 | **購物車品項 ID** | CartItemId | CartItem 的唯一識別值（UUID） |
 | **購物車品項快照** | CartItemSnapshot | 結帳當下的 CartItem 不可變記錄，用於 `CartCheckedOutEvent`；含 `productId`、`quantity`、`unitPrice` |
-| **數量** | Quantity | 品項的購買數量，最小值為 1 |
+| **數量** | Quantity | 品項的購買數量，最小值為 1（**語意收斂**：不允許 0，若需移除請呼叫 `removeItem`） |
 | **單價快照** | Unit Price Snapshot | 加入購物車時的定價快照；結帳前會重新向 Catalog 確認 |
 | **小計** | Subtotal | 購物車內所有品項的金額加總 |
 | **加入品項** | Add Item | 將商品加入購物車，若同商品已存在則累加數量 |
