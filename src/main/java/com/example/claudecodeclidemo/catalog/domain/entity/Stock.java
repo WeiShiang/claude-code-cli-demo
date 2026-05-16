@@ -7,18 +7,15 @@ import com.example.claudecodeclidemo.catalog.domain.exception.InvalidReleaseAmou
 import com.example.claudecodeclidemo.catalog.domain.exception.InvalidStockQuantityException;
 import com.example.claudecodeclidemo.catalog.domain.exception.InvalidStockReservationException;
 import com.example.claudecodeclidemo.catalog.domain.vo.ProductId;
+import com.example.claudecodeclidemo.shared.domain.AggregateRoot;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
-public class Stock {
+public class Stock extends AggregateRoot<ProductId> {
 
     private final ProductId productId;
     private int quantity;
     private int reserved;
-    private final List<Object> domainEvents = new ArrayList<>();
 
     private Stock(ProductId productId, int quantity) {
         this.productId = productId;
@@ -61,7 +58,7 @@ public class Stock {
         quantity -= amount;
         reserved -= amount;
         if (quantity == 0) {
-            domainEvents.add(new StockDepletedEvent(productId, Instant.now()));
+            registerEvent(new StockDepletedEvent(productId, Instant.now()));
         }
     }
 
@@ -69,10 +66,7 @@ public class Stock {
         return quantity - reserved;
     }
 
-    public List<Object> getDomainEvents() {
-        return Collections.unmodifiableList(domainEvents);
-    }
-
+    @Override public ProductId getId() { return productId; }
     public ProductId getProductId() { return productId; }
     public int getQuantity() { return quantity; }
     public int getReserved() { return reserved; }

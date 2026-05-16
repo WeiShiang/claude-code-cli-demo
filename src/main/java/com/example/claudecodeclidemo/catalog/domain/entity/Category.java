@@ -1,10 +1,11 @@
 package com.example.claudecodeclidemo.catalog.domain.entity;
 
 import com.example.claudecodeclidemo.catalog.domain.vo.CategoryId;
+import com.example.claudecodeclidemo.shared.domain.AggregateRoot;
 
 import java.util.UUID;
 
-public class Category {
+public class Category extends AggregateRoot<CategoryId> {
 
     private final CategoryId id;
     private final String name;
@@ -28,7 +29,7 @@ public class Category {
         return new Category(id, name, parentId);
     }
 
-    public CategoryId getId() { return id; }
+    @Override public CategoryId getId() { return id; }
     public String getName() { return name; }
     public CategoryId getParentId() { return parentId; }
     public boolean isRoot() { return parentId == null; }

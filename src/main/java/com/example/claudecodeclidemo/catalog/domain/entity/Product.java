@@ -9,14 +9,12 @@ import com.example.claudecodeclidemo.catalog.domain.vo.Money;
 import com.example.claudecodeclidemo.catalog.domain.vo.ProductId;
 import com.example.claudecodeclidemo.catalog.domain.vo.ProductStatus;
 import com.example.claudecodeclidemo.catalog.domain.vo.Sku;
+import com.example.claudecodeclidemo.shared.domain.AggregateRoot;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 
-public class Product {
+public class Product extends AggregateRoot<ProductId> {
 
     private final ProductId id;
     private final String name;
@@ -24,7 +22,6 @@ public class Product {
     private Money price;
     private final CategoryId categoryId;
     private ProductStatus status;
-    private final List<Object> domainEvents = new ArrayList<>();
 
     private Product(ProductId id, String name, Sku sku, Money price, CategoryId categoryId) {
         this.id = id;
@@ -39,8 +36,8 @@ public class Product {
         if (name == null || name.isBlank()) {
             throw new InvalidProductNameException();
         }
-        final var product = new Product(new ProductId(UUID.randomUUID()), name, sku, price, categoryId);
-        product.domainEvents.add(new ProductCreatedEvent(product.id, sku, price, Instant.now()));
+        var product = new Product(new ProductId(UUID.randomUUID()), name, sku, price, categoryId);
+        product.registerEvent(new ProductCreatedEvent(product.id, sku, price, Instant.now()));
         return product;
     }
 
@@ -68,14 +65,10 @@ public class Product {
     public void changePrice(Money newPrice) {
         var oldPrice = this.price;
         this.price = newPrice;
-        domainEvents.add(new ProductPriceChangedEvent(id, oldPrice, newPrice, Instant.now()));
+        registerEvent(new ProductPriceChangedEvent(id, oldPrice, newPrice, Instant.now()));
     }
 
-    public List<Object> getDomainEvents() {
-        return Collections.unmodifiableList(domainEvents);
-    }
-
-    public ProductId getId() { return id; }
+    @Override public ProductId getId() { return id; }
     public String getName() { return name; }
     public Sku getSku() { return sku; }
     public Money getPrice() { return price; }
