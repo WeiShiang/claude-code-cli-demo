@@ -39,7 +39,7 @@ public class Product {
         if (name == null || name.isBlank()) {
             throw new InvalidProductNameException();
         }
-        var product = new Product(new ProductId(UUID.randomUUID()), name, sku, price, categoryId);
+        final var product = new Product(new ProductId(UUID.randomUUID()), name, sku, price, categoryId);
         product.domainEvents.add(new ProductCreatedEvent(product.id, sku, price, Instant.now()));
         return product;
     }

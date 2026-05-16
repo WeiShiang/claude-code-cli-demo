@@ -44,16 +44,14 @@ public class Stock {
     }
 
     public void release(int amount) {
-        if (amount <= 0 || amount > reserved) {
-            throw new InvalidReleaseAmountException(amount, reserved);
-        }
+        if (amount <= 0) throw new InvalidReleaseAmountException(amount, reserved);
+        if (amount > reserved) throw new InvalidReleaseAmountException(amount, reserved);
         reserved -= amount;
     }
 
     public void deduct(int amount) {
-        if (amount <= 0 || amount > reserved) {
-            throw new InvalidDeductAmountException(amount, reserved);
-        }
+        if (amount <= 0) throw new InvalidDeductAmountException(amount, reserved);
+        if (amount > reserved) throw new InvalidDeductAmountException(amount, reserved);
         quantity -= amount;
         reserved -= amount;
         if (quantity == 0) {
