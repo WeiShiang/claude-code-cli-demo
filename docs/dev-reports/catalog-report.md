@@ -1,112 +1,113 @@
 # Catalog BC 開發報告
 
-**日期**: 2026-05-14  
-**開發者**: Claude Sonnet 4.6 (DDD+TDD Agent)  
-**方法論**: Domain-Driven Design + Test-Driven Development
+**日期**：2026-05-16
+**Branch**：test
+**開發者**：weihsiang
 
 ---
 
 ## 實作摘要
 
-### Aggregate
+### Aggregate 清單
 
-| Aggregate Root | Entities | Value Objects |
+| Class | 類型 | 說明 |
 |---|---|---|
-| Product | — | ProductId, Sku, Money, CategoryId |
-| Stock | — | ProductId, Sku |
+| `Product` | Aggregate Root | 商品生命週期管理（建立、狀態轉換、改價） |
+| `Stock` | Entity | 商品庫存管理（預留、釋出、扣除） |
+| `Category` | Entity | 商品分類（根分類 / 子分類） |
 
-### Use Cases
+### Value Object 清單
+
+| Class | 說明 |
+|---|---|
+| `ProductId` | 商品唯一識別（UUID） |
+| `CategoryId` | 分類唯一識別（UUID） |
+| `Sku` | 商品庫存單位，格式 `[A-Z0-9-]{4,20}` |
+| `Money` | 金額 + 幣別，金額 ≥ 0 |
+| `ProductStatus` | 商品狀態列舉：`ACTIVE / INACTIVE / DISCONTINUED` |
+
+### Use Case 清單
 
 | Interface | 實作 | 說明 |
 |---|---|---|
-| `CreateProductUseCase` | `ProductService` | 建立商品 + 初始化庫存 |
-| `QueryProductUseCase` | `ProductService` | 查詢商品 |
-| `CatalogQueryPort` | `StockService` | 查詢價格 / 活躍狀態 |
-| `StockReservationPort` | `StockService` | 保留 / 釋放 / 扣除庫存 |
+| `CreateProductUseCase` | `CreateProductService` | 建立商品 + 初始庫存（SKU 唯一性、分類存在性驗證） |
+| `UpdateStockUseCase` | `UpdateStockService` | 預留 / 釋出 / 扣除庫存 |
+| `QueryProductUseCase` | `QueryProductService` | 依 ProductId 查詢商品 |
 
-### Domain Events
+### Domain Event 清單
 
-| 事件 | 觸發時機 | 消費者（v2） |
+| Event | 觸發時機 | 消費者（本 BC 內） |
 |---|---|---|
 | `ProductCreatedEvent` | `Product.create()` | — |
-| `ProductPriceChangedEvent` | `Product.changePrice()` | Cart BC |
-| `StockDepletedEvent` | `Stock.deduct()` 後 quantity = 0 | Catalog（自動下架）|
+| `ProductPriceChangedEvent` | `Product.changePrice()` | — |
+| `StockDepletedEvent` | `Stock.deduct()` 導致 `quantity == 0` | — |
 
-### REST Endpoints
+### API 端點清單
 
-| Method | Path | 說明 |
-|---|---|---|
-| POST | `/api/products` | 建立商品（201 Created）|
-| GET | `/api/products/{id}` | 查詢商品（200 OK）|
+| Method | Path | Use Case | 回應 |
+|---|---|---|---|
+| POST | `/api/catalog/products` | `CreateProductUseCase` | 201 + `productId` |
+| GET | `/api/catalog/products/{productId}` | `QueryProductUseCase` | 200 / 404 |
+| PUT | `/api/catalog/products/{productId}/stock/reserve` | `UpdateStockUseCase` | 204 |
+| PUT | `/api/catalog/products/{productId}/stock/release` | `UpdateStockUseCase` | 204 |
+| PUT | `/api/catalog/products/{productId}/stock/deduct` | `UpdateStockUseCase` | 204 |
 
 ---
 
 ## TDD 循環記錄
 
-| Phase | 說明 | Commit |
+| Phase | 內容 | Commit |
 |---|---|---|
-| RED | 撰寫 VO / Entity / Event / UseCase 測試（全部 FAIL） | `789ee96` |
-| GREEN | 實作 Domain + Application 層（69 tests PASS） | `42edc97` |
-| REFACTOR | 修正 Stock.sku null bug、移除 setSku()、命名合規 | `e086148` |
-| ADAPTER | Adapter 層（JPA + REST）+ @Transactional | `e7ae193` |
-| COVERAGE | 補充 VO 邊界測試，domain.vo 73% → 99% | `a29ef95` |
+| 🔴 RED | ProductTest / StockTest / CreateProductServiceTest（17 負向測試，全 FAIL） | `f44a632` |
+| 🟢 GREEN | Domain VO / Exception / Entity / Event / Port Interface 最小實作 | `fd8bdfa` |
+| 🔵 REFACTOR | 命名、CQS、錯誤處理、控制流程清理 | `93cc938` |
+| Application | CreateProductService / UpdateStockService / QueryProductService | `9f42cdd` |
+| Adapter | ProductController / JPA Adapter / Exception Handler | `30ffc8b` |
 
 ---
 
-## 覆蓋率（最終）
+## 覆蓋率（JaCoCo Line Coverage）
 
-| 套件 | Instructions |
-|---|---|
-| `domain.entity` | 100% |
-| `domain.event` | 100% |
-| `domain.exception` | 100% |
-| `domain.vo` | 99% |
-| `application.service` | 93% |
-| `adapter.out.persistence` | 100% |
-| `adapter.in.web` | 86% |
-| **整體** | **96%** |
-
----
-
-## DDD Rules 合規結果（14 條）
-
-| # | 規則 | 結果 |
-|---|---|---|
-| 1 | domain-specific-naming（無 Utils/Helper/Manager） | PASS |
-| 2 | ubiquitous-language（命名符合詞彙表） | PASS |
-| 3 | aggregate-root-pattern（Product/Stock 繼承 AggregateRoot） | PASS |
-| 4 | value-object-immutability（Money/Sku/ProductId/CategoryId final）| PASS |
-| 5 | domain-event-pattern（immutable record + occurredAt） | PASS |
-| 6 | domain-purity（domain 層零 Spring/JPA import） | PASS |
-| 7 | hexagonal-architecture（Domain → Application → Adapter 單向依賴） | PASS |
-| 8 | port-adapter-separation（Port 介面在 application/port/）| PASS |
-| 9 | invariant-enforcement（guard clause 在 Aggregate 方法內）| PASS |
-| 10 | command-query-separation（命令無回傳，查詢無副作用）| PASS |
-| 11 | early-return-pattern（錯誤路徑優先 throw）| PASS |
-| 12 | function-file-size-limits（方法 ≤ 20 行，類別 ≤ 200 行）| PASS |
-| 13 | explicit-control-flow（無隱式 null 傳遞）| PASS |
-| 14 | reconstitute-factory（JPA ↔ Domain 分離，透過 reconstitute()）| PASS |
-
----
-
-## 驗收 Gate 結果（V-1 ～ V-6）
-
-| Gate | 門檻 | 實際 | 結果 |
+| 層次 | Line Coverage | 門檻 | 結果 |
 |---|---|---|---|
-| V-1 | 0 failures | 86 tests, 0 failures | ✅ |
-| V-2 整體 | ≥ 60% line | 96% instructions | ✅ |
-| V-2 domain | ≥ 90% | entity/event/exception 100%, vo 99% | ✅ |
-| V-3 domain 純度 | 無 Spring/JPA | grep 確認無 import | ✅ |
-| V-4 命名合規 | ubiquitous-language | 人工審查通過 | ✅ |
-| V-5 Invariant 測試 | P-1～P-6, S-1～S-5 各有負向測試 | 11 條 invariant × 1+ 負向 | ✅ |
-| V-6 Event 測試 | 每個 Event 有發布驗證 | 3 Events 各有 isA() verify | ✅ |
+| domain/entity | 96.3% (79/82) | ≥ 90% | ✅ |
+| domain/vo | 91.3% (21/23) | ≥ 90% | ✅ |
+| domain/exception | 100% (24/24) | ≥ 90% | ✅ |
+| domain/event | 100% (3/3) | ≥ 90% | ✅ |
+| application/service | 100% (34/34) | ≥ 80% | ✅ |
+| adapter/in/web | 87.5% (35/40) | ≥ 70% | ✅ |
+| adapter/out/persistence | 92.0% (69/75) | ≥ 70% | ✅ |
+| **整體** | **93.9% (275/293)** | ≥ 60% | ✅ |
 
 ---
 
-## 已知限制與後續待辦
+## 驗收 Gate 結果
 
-1. **Spring Boot 4.0.6 特異**：`@WebMvcTest` / `@DataJpaTest` 切片測試已移除，改用 `@SpringBootTest`；Web 層測試啟動完整 context，執行較慢。
-2. **CategoryExistsAdapter**：目前直接查 JPA，Category 尚無獨立管理 Use Case（v2 待補）。
-3. **StockDepletedEvent 消費者**：Catalog 自動下架邏輯尚未實作（v2 待補）。
-4. **UpdateProductUseCase**：`ProductPriceChangedEvent` 觸發者尚未建立 API 端點（v2 待補）。
-5. **`@Transactional` on readOnly**：`StockService.isActive()` 尚未加 readOnly，可最佳化。
+| # | 項目 | 結果 |
+|---|---|---|
+| V-1 | 所有測試通過（80 tests, 0 failures） | ✅ |
+| V-2 | Line Coverage 整體 93.9%，domain ≥ 91% | ✅ |
+| V-3 | Domain 層無 Spring / JPA import | ✅ |
+| V-4 | 命名符合 ubiquitous-language.md | ✅ |
+| V-5 | 每條 Invariant 有負向測試（共 17 個 assertThatThrownBy） | ✅ |
+| V-6 | 3 個 Domain Event 均有 getDomainEvents() 驗證測試 | ✅ |
+
+---
+
+## DDD Rules 合規結果
+
+| Rule | 狀態 | 備註 |
+|---|---|---|
+| `functional-core-imperative-shell` | ✅ | Domain 層僅 `java.*` import |
+| `clean-architecture-ddd` | ✅ | 依賴方向：Adapter → Application → Domain |
+| `separation-of-concerns` | ✅ | JPA annotation 只在 `adapter/out/persistence/` |
+| `library-first-approach` | ✅ | 使用 `jakarta.validation`、Spring Data JPA、`@RestControllerAdvice` |
+
+---
+
+## 已知限制與待辦
+
+- **Domain Event 發布**：`domainEvents` 目前僅存於 Aggregate 記憶體中，尚未整合 Spring `ApplicationEventPublisher`。若需跨 BC 通知（如 order BC 訂閱 `StockDepletedEvent`），需在 Application Service 層加入 event publishing。
+- **樂觀鎖**：`StockJpaEntity` 未加 `@Version`，高並發場景可能有 lost update 問題。
+- **Test Slice 限制**：Spring Boot 4.x 已移除 `@WebMvcTest` / `@DataJpaTest`，Controller 測試改用 `MockMvcBuilders.standaloneSetup()`，Persistence 測試改用 `@SpringBootTest @Transactional`。
+- **分類管理 Use Case**：`CategoryRepository.save()` 有實作但無對應 Use Case，若需建立分類 API 端點需補充 `CreateCategoryUseCase`。
