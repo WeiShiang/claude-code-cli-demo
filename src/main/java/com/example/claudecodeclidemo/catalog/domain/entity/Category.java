@@ -24,6 +24,10 @@ public class Category {
         return new Category(new CategoryId(UUID.randomUUID()), name, parentId);
     }
 
+    public static Category reconstitute(CategoryId id, String name, CategoryId parentId) {
+        return new Category(id, name, parentId);
+    }
+
     public CategoryId getId() { return id; }
     public String getName() { return name; }
     public CategoryId getParentId() { return parentId; }

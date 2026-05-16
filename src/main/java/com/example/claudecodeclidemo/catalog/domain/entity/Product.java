@@ -44,6 +44,12 @@ public class Product {
         return product;
     }
 
+    public static Product reconstitute(ProductId id, String name, Sku sku, Money price, CategoryId categoryId, ProductStatus status) {
+        var product = new Product(id, name, sku, price, categoryId);
+        product.status = status;
+        return product;
+    }
+
     public void activate() {
         if (status == ProductStatus.DISCONTINUED) {
             throw new InvalidProductStateTransitionException(status, ProductStatus.ACTIVE);

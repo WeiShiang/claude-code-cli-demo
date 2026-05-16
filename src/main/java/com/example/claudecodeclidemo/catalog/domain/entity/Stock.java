@@ -33,6 +33,12 @@ public class Stock {
         return new Stock(productId, quantity);
     }
 
+    public static Stock reconstitute(ProductId productId, int quantity, int reserved) {
+        Stock stock = new Stock(productId, quantity);
+        stock.reserved = reserved;
+        return stock;
+    }
+
     public void reserve(int amount) {
         if (amount <= 0) {
             throw new InvalidStockReservationException(amount);
