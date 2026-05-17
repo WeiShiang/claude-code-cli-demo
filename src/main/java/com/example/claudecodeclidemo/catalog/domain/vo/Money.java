@@ -6,40 +6,25 @@ import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.Objects;
 
-public final class Money {
-
-    private final BigDecimal amount;
-    private final Currency currency;
-
-    public Money(BigDecimal amount, Currency currency) {
-        if (amount == null || amount.compareTo(BigDecimal.ZERO) < 0) {
-            throw new InvalidPriceException(amount);
-        }
-        this.amount = amount;
-        this.currency = Objects.requireNonNull(currency, "currency must not be null");
+public record Money(BigDecimal amount, Currency currency) {
+    public Money {
+        if (amount == null) throw new InvalidPriceException("amount cannot be null");
+        if (currency == null) throw new InvalidPriceException("currency cannot be null");
+        if (amount.signum() < 0) throw new InvalidPriceException("amount cannot be negative");
     }
-
-    public BigDecimal amount() {
-        return amount;
-    }
-
-    public Currency currency() {
-        return currency;
+    public static Money of(BigDecimal amount, Currency currency) {
+        return new Money(amount, currency);
     }
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof Money m)) return false;
-        return amount.compareTo(m.amount) == 0 && currency.equals(m.currency);
+        if (this == o) return true;
+        if (!(o instanceof Money other)) return false;
+        return amount.compareTo(other.amount) == 0 && currency.equals(other.currency);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(amount.stripTrailingZeros(), currency);
-    }
-
-    @Override
-    public String toString() {
-        return amount + " " + currency.getCurrencyCode();
+        return Objects.hash(amount.stripTrailingZeros().toPlainString(), currency);
     }
 }
