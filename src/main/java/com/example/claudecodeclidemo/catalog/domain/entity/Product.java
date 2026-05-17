@@ -27,6 +27,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class Product extends AggregateRoot<ProductId> {
 
@@ -46,7 +47,7 @@ public class Product extends AggregateRoot<ProductId> {
         this.id = Objects.requireNonNull(id, "id");
         this.sku = Objects.requireNonNull(sku, "sku");
         this.name = validateName(name);
-        this.description = description == null ? "" : description;
+        this.description = Objects.requireNonNullElse(description, "");
         this.status = ProductStatus.DRAFT;
         this.createdAt = now;
         this.updatedAt = now;
@@ -92,7 +93,7 @@ public class Product extends AggregateRoot<ProductId> {
             throw new MissingPriceException("product must have listPrice before publish");
         }
         status = ProductStatus.PUBLISHED;
-        updatedAt = Instant.now();
+        touchUpdatedAt();
         registerEvent(new ProductPublishedEvent(
                 UUID.randomUUID(), updatedAt, id.value(), sku.value(), name,
                 listPrice.money(), categoryUuids()));
@@ -106,7 +107,7 @@ public class Product extends AggregateRoot<ProductId> {
         }
         Objects.requireNonNull(reason, "reason");
         status = ProductStatus.DRAFT;
-        updatedAt = Instant.now();
+        touchUpdatedAt();
         registerEvent(new ProductUnpublishedEvent(
                 UUID.randomUUID(), updatedAt, id.value(), sku.value(), reason));
     }
@@ -118,25 +119,21 @@ public class Product extends AggregateRoot<ProductId> {
                     "only PUBLISHED can archive, current=" + status);
         }
         status = ProductStatus.ARCHIVED;
-        updatedAt = Instant.now();
+        touchUpdatedAt();
         registerEvent(new ProductArchivedEvent(UUID.randomUUID(), updatedAt, id.value()));
     }
 
     public void updatePrice(Money newPrice) {
         ensureNotArchived();
         Objects.requireNonNull(newPrice, "newPrice");
-        if (listPrice != null && !listPrice.money().currency().equals(newPrice.currency())) {
-            throw new CurrencyMismatchException(
-                    "currency mismatch: existing=" + listPrice.money().currency()
-                            + ", new=" + newPrice.currency());
-        }
+        ensureCurrencyMatches(newPrice);
         ListPrice nextPrice = ListPrice.of(newPrice);
         if (listPrice != null && listPrice.money().equals(newPrice)) {
             return;
         }
         Money previous = listPrice == null ? null : listPrice.money();
         listPrice = nextPrice;
-        updatedAt = Instant.now();
+        touchUpdatedAt();
         registerEvent(new PriceChangedEvent(
                 UUID.randomUUID(), updatedAt, id.value(), sku.value(), previous, newPrice));
     }
@@ -144,40 +141,40 @@ public class Product extends AggregateRoot<ProductId> {
     public void rename(String newName) {
         ensureNotArchived();
         this.name = validateName(newName);
-        updatedAt = Instant.now();
+        touchUpdatedAt();
     }
 
     public void updateDescription(String newDescription) {
         ensureNotArchived();
-        this.description = newDescription == null ? "" : newDescription;
-        updatedAt = Instant.now();
+        this.description = Objects.requireNonNullElse(newDescription, "");
+        touchUpdatedAt();
     }
 
     public void assignCategory(CategoryId categoryId) {
         ensureNotArchived();
         Objects.requireNonNull(categoryId, "categoryId");
         categoryIds.add(categoryId);
-        updatedAt = Instant.now();
+        touchUpdatedAt();
     }
 
     public void removeCategory(CategoryId categoryId) {
         ensureNotArchived();
         Objects.requireNonNull(categoryId, "categoryId");
         categoryIds.remove(categoryId);
-        updatedAt = Instant.now();
+        touchUpdatedAt();
     }
 
     public void addAttribute(Attribute attribute) {
         ensureNotArchived();
         Objects.requireNonNull(attribute, "attribute");
         attributes.add(attribute);
-        updatedAt = Instant.now();
+        touchUpdatedAt();
     }
 
     public void removeAttribute(Attribute attribute) {
         ensureNotArchived();
         attributes.remove(attribute);
-        updatedAt = Instant.now();
+        touchUpdatedAt();
     }
 
     public void addMedia(String url) {
@@ -186,13 +183,13 @@ public class Product extends AggregateRoot<ProductId> {
             throw new IllegalArgumentException("media url cannot be blank");
         }
         mediaUrls.add(url);
-        updatedAt = Instant.now();
+        touchUpdatedAt();
     }
 
     public void removeMedia(String url) {
         ensureNotArchived();
         mediaUrls.remove(url);
-        updatedAt = Instant.now();
+        touchUpdatedAt();
     }
 
     private void ensureNotArchived() {
@@ -201,10 +198,23 @@ public class Product extends AggregateRoot<ProductId> {
         }
     }
 
+    private void ensureCurrencyMatches(Money newPrice) {
+        if (listPrice == null) return;
+        if (!listPrice.money().currency().equals(newPrice.currency())) {
+            throw new CurrencyMismatchException(
+                    "currency mismatch: existing=" + listPrice.money().currency()
+                            + ", new=" + newPrice.currency());
+        }
+    }
+
+    private void touchUpdatedAt() {
+        this.updatedAt = Instant.now();
+    }
+
     private Set<UUID> categoryUuids() {
-        Set<UUID> uuids = new LinkedHashSet<>();
-        for (CategoryId c : categoryIds) uuids.add(c.value());
-        return uuids;
+        return categoryIds.stream()
+                .map(CategoryId::value)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     private static String validateName(String name) {
