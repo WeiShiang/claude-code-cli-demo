@@ -1,236 +1,153 @@
 # DDD + TDD BC 開發工作流
 
-你是一個遵循 **DDD + TDD** 的 Spring Boot 開發 agent。  
-目標 BC：**$ARGUMENTS**（若未提供，列出可選清單：catalog / cart / order / payment）
+你是一個遵循 **DDD + TDD** 的 Spring Boot 開發 agent。
+目標 BC：**$ARGUMENTS**（若未提供，列出可選清單：catalog / cart / order）
 
-完整規範見 `docs/agent-workflow-ddd-tdd.md`。每個 Phase 完成後向使用者報告進度，**等待確認後**才進下一個 Phase。
+完整規範與範本見 `docs/agent-workflow-ddd-tdd.md`。每個 Phase 完成後**回報進度並等待確認**，不自動跳到下一 Phase。
 
 ---
 
 ## 啟動前置
 
-1. 確認 BC 名稱有效（catalog / cart / order / payment）。若無效或未提供，停止並請使用者重新輸入。
-2. `ddd@context-engineering-kit` plugin 規則已自動附加到 context
+1. 確認 BC 名稱有效（catalog / cart / order）；無效則停止並請使用者重新輸入。
+2. `ddd@context-engineering-kit` plugin 規則已自動附加到 context。
 
 ---
 
 ## Phase 0：DDD 分析
 
-依序讀取以下文件，並萃取 **$ARGUMENTS** BC 的設計約束：
+依序讀取以下文件，萃取 **$ARGUMENTS** BC 的設計約束：
 
 ```
-Read: docs/domain/bounded-contexts.md
-Read: docs/domain/ubiquitous-language.md
-Read: docs/domain/invariants.md
-Read: docs/domain/domain-events.md
+docs/domain/bounded-contexts.md      → Aggregate、Port 清單
+docs/domain/ubiquitous-language.md   → 命名詞彙表
+docs/domain/invariants.md            → 不變量清單 + Exception 名稱
+docs/domain/domain-events.md         → 發布/訂閱事件清單
 ```
 
-讀取完畢後，輸出以下分析摘要並等待確認：
+依 `agent-workflow-ddd-tdd.md` §0.3 的範本輸出分析摘要（Aggregate / Invariants / Domain Events / Port 清單）。
 
-```
-## [$ARGUMENTS] 分析摘要
-
-### Aggregate
-- Aggregate Root:
-- Entities:
-- Value Objects:
-
-### Invariants（本 BC）
-- [規則] → 違反拋 [ExceptionName]
-
-### Domain Events
-- 發布:
-- 訂閱:
-
-### Port 清單
-- In (UseCase):
-- Out (Repository/Port):
-```
-
-**Gate G0**：上述 4 項確認無誤後才繼續。
+**Gate G0**：4 項確認無誤後才繼續。
 
 ---
 
 ## Phase 1：領域設計
 
-規劃以下 package 結構（**只列出，不寫程式碼**）：
+規劃 package 結構（**只列出 class 清單，不寫程式碼**）：
 
 ```
 com.example.claudecodeclidemo.$ARGUMENTS/
-├── domain/
-│   ├── entity/
-│   ├── vo/
-│   ├── event/
-│   └── exception/
-├── application/
-│   └── port/
-│       ├── in/
-│       └── out/
-└── adapter/
-    ├── in/
-    │   └── web/
-    └── out/
-        └── persistence/
+├── domain/{entity,vo,event,exception}/
+├── application/port/{in,out}/
+└── adapter/{in/web, out/persistence}/
 ```
 
-列出所有將要建立的 class 清單（含型別：Aggregate Root / Entity / VO / UseCase / Port / Event / Exception）。
+列出所有將建立的 class（標註型別：Aggregate Root / Entity / VO / UseCase / Port / Event / Exception）。
 
 等待使用者確認設計後才進 Phase 2。
 
 ---
 
-## Phase 2：Red（寫測試，必須 FAIL）
+## Phase 2：🔴 Red（寫測試，必須 FAIL）
 
 **使用 `ecc:tdd-workflow` skill 指引。**
 
-依序撰寫：
+撰寫順序：
+
 1. Value Object 單元測試
 2. Domain Entity 不變量測試（每條 Invariant 至少一個負向案例）
 3. Domain Entity 狀態轉換測試
 4. Domain Event 發布測試
 5. Use Case 單元測試（Mock Port Out）
 
-測試撰寫完畢後執行：
-```bash
-./gradlew test
-```
+執行 `./gradlew test`，**確認測試 FAIL 且原因為「實作不存在」**（非 syntax error）。
 
-**確認所有測試 FAIL，且失敗原因是「實作不存在」（非 syntax error）。**
-
-建立 Git checkpoint：
-```bash
-git add src/test/
-git commit -m "test: add red tests for $ARGUMENTS"
-```
-
-回報 RED 結果（幾個測試、哪些 fail）後等待確認。
+回報 RED 結果（測試數、失敗清單）後等待確認。
 
 ---
 
-## Phase 3：Green（最小實作通過測試）
+## Phase 3：🟢 Green（最小實作通過測試）
 
-**`ddd` plugin 規則強制（`functional-core-imperative-shell`）：Domain 層只允許 `java.*` import，禁止 Spring / JPA。**
+**範圍**：Domain 層 + Port Interface。Application Service 完整實作保留至 Phase 5。
 
-> **範圍**：Domain 層 + Port Interface。Application Service 完整實作保留至 Phase 5。
+**`functional-core-imperative-shell` 規則強制**：Domain 層只允許 `java.*` import，禁止 Spring / JPA。
 
-依序實作：
-1. Value Objects（含驗證、equals、hashCode）
-2. Domain Exceptions（對應 invariants.md）
-3. Domain Entities / Aggregate Root（含狀態機、不變量守衛）
-4. Domain Events（immutable record/class，含 `occurredAt`）
-5. Port Interfaces（`application/port/in` 和 `application/port/out`）
+實作順序：Value Objects → Domain Exceptions → Entities/Aggregate Root → Domain Events → Port Interfaces。
 
-實作完畢後執行：
-```bash
-./gradlew test
-```
-
-**確認所有測試 PASS。**
-
-建立 Git checkpoint：
-```bash
-git add src/main/java/ src/test/java/
-git commit -m "feat: implement $ARGUMENTS domain layer"
-```
-
-回報 GREEN 結果後等待確認。
+執行 `./gradlew test`，**確認全部 PASS**。回報後等待確認。
 
 ---
 
-## Phase 4：Refactor
+## Phase 4：🔵 Refactor
 
-**參照 `ddd` plugin 規則：`domain-specific-naming`、`function-file-size-limits`、`early-return-pattern`、`explicit-control-flow`、`command-query-separation`。**
+對照 `agent-workflow-ddd-tdd.md` §4.1 重構檢查清單（命名、函式大小、資料流、錯誤處理、控制流程、CQS）。
 
-檢查並修正：
-- 無 `Utils` / `Helper` / `Manager` 類別名稱
-- 命名符合 `docs/domain/ubiquitous-language.md` 詞彙表
-- 每個方法 ≤ 20 行，每個 class ≤ 200 行
-- 錯誤路徑使用 Early Return
-- 查詢方法無副作用，命令方法無回傳值（CQS）
-- Domain 層確認無 Spring / JPA import
-
-重構後執行：
-```bash
-./gradlew test
-```
-
-**確認測試仍全綠。**
-
-建立 Git checkpoint：
-```bash
-git commit -m "refactor: clean up $ARGUMENTS domain layer"
-```
+執行 `./gradlew test`，**測試必須仍全綠**。
 
 ---
 
 ## Phase 5：Application Layer 完整實作
 
-> Phase 3 僅建立 Port Interface；**Application Service 的完整實作在此 Phase 進行。**
-
 實作 Application Service：
+
 - `@Service @Transactional`（事務邊界在此層）
-- implements UseCase Interface
-- 注入 Port Out（Repository、外部 Port）
-- 協調：呼叫 Port Out → 建立 Aggregate → 持久化 → 發布 Domain Event
-- **Service 本身不含業務邏輯**
+- implements UseCase Interface，注入 Port Out
+- 協調流程：Port Out → 建立 Aggregate → 持久化 → 發布 Domain Event
+- **Service 不含業務邏輯**
 
-補充 Application Layer 完整測試（`@ExtendWith(MockitoExtension.class)`，Mock Port Out，不啟動 Spring context）。
+補充 Application Layer 測試（`@ExtendWith(MockitoExtension.class)`，Mock Port Out，不啟動 Spring context）。
 
-詳細範本見 `docs/agent-workflow-ddd-tdd.md` §5.1–5.3。
+詳細範本見 `agent-workflow-ddd-tdd.md` §5。
 
 ---
 
 ## Phase 6：Adapter Layer
 
-**Adapter In（Web）：**
-- `@RestController`：薄薄一層，只做 DTO ↔ Command/Query 轉換
-- `@WebMvcTest` 測試
+**Adapter In（Web）**：`@RestController` 薄薄一層，只做 DTO ↔ Command/Query 轉換，搭配 `@WebMvcTest`。
 
-**Adapter Out（Persistence）：**
-- JPA Entity（與 Domain Entity 完全分離，只在 `adapter/out/persistence/` 下有 JPA annotation）
-- Repository Adapter 實作 Port Out Interface
-- `@DataJpaTest` 或 `@SpringBootTest` Integration Test
+**Adapter Out（Persistence）**：JPA Entity 與 Domain Entity 完全分離（JPA annotation 只出現在 `adapter/out/persistence/`），Repository Adapter 實作 Port Out Interface，搭配 `@DataJpaTest` 或 `@SpringBootTest`。
+
+詳細範本見 `agent-workflow-ddd-tdd.md` §6。
 
 ---
 
 ## Phase 7：測試驗收
 
-執行全套測試與 Coverage 報告：
+執行：
+
 ```bash
 ./gradlew test jacocoTestReport
 ```
 
-確認 6 項驗收 Gate：
+確認 6 項驗收 Gate（詳見 `agent-workflow-ddd-tdd.md` §7.4）：
 
 | # | 項目 | 門檻 |
 |---|---|---|
 | V-1 | 所有測試通過 | 0 failures |
-| V-2 | Line Coverage | ≥ 60%（整體），domain ≥ 90% |
+| V-2 | Line Coverage | 整體 ≥ 60%，domain ≥ 90% |
 | V-3 | Domain 純度 | domain/ 無 Spring / JPA import |
 | V-4 | 命名合規 | 符合 ubiquitous-language.md |
 | V-5 | Invariant 測試 | 每條 Invariant 有負向測試 |
 | V-6 | Event 測試 | 每個 Domain Event 有驗證發布的測試 |
 
-若有項目未達標，回到對應 Phase 修正。
+未達標則回對應 Phase 修正。
 
 ---
 
 ## Phase 8：開發報告
 
-產出報告至 `docs/dev-reports/$ARGUMENTS-report.md`，包含：
-
-- 實作摘要（Aggregate、UseCase、Domain Event 清單）
-- TDD 循環記錄（每個循環的 RED / GREEN / REFACTOR commit hash）
-- 覆蓋率數字（domain / application / adapter / 整體）
-- DDD Rules 合規結果（規則各自 PASS / FAIL）
-- 已知限制與後續待辦
+產出報告至 `docs/dev-reports/$ARGUMENTS-report.md`，內容含：實作摘要、TDD 循環記錄（RED/GREEN/REFACTOR commit hash）、覆蓋率、DDD Rules 合規結果、已知限制。報告範本見 `agent-workflow-ddd-tdd.md` §8。
 
 ---
 
 ## 執行守則
 
 - 每個 Phase 結束後**回報進度並等待確認**，不自動跳到下一 Phase
-- Phase 2 的 RED 必須實際執行測試確認 FAIL，不得跳過
-- Phase 3 的 GREEN 必須實際執行測試確認 PASS，不得跳過
+- Phase 2 RED 必須實際執行測試確認 FAIL；Phase 3 GREEN 必須實際執行測試確認 PASS
 - Domain 層違反 DDD 規則時立即停止，修正後再繼續
-- Git checkpoint 是必要步驟，不得省略
+- 每個 Phase 結束建立 Git checkpoint（commit prefix 對照表見 `agent-workflow-ddd-tdd.md` 附錄）：
+  - Phase 2：`test: add red tests for $ARGUMENTS`
+  - Phase 3：`feat: implement $ARGUMENTS domain layer`
+  - Phase 4：`refactor: clean up $ARGUMENTS domain layer`
+  - Phase 5：`feat: implement $ARGUMENTS application service`
+  - Phase 6：`feat: implement $ARGUMENTS REST adapter and JPA adapter`
