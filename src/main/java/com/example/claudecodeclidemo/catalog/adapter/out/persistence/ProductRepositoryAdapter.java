@@ -11,6 +11,7 @@ import com.example.claudecodeclidemo.catalog.domain.vo.ProductId;
 import com.example.claudecodeclidemo.catalog.domain.vo.Sku;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.Currency;
 import java.util.HashSet;
 import java.util.List;
@@ -50,8 +51,8 @@ public class ProductRepositoryAdapter implements ProductRepository {
                 .map(CategoryId::value).collect(Collectors.toCollection(HashSet::new)));
         entity.setAttributes(product.getAttributes().stream()
                 .map(a -> new AttributeEmbeddable(a.key(), a.value()))
-                .collect(Collectors.toList()));
-        entity.setMediaUrls(List.copyOf(product.getMediaUrls()));
+                .collect(Collectors.toCollection(ArrayList::new)));
+        entity.setMediaUrls(new ArrayList<>(product.getMediaUrls()));
         jpaRepository.save(entity);
     }
 
