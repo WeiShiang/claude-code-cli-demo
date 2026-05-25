@@ -5,7 +5,7 @@
 > **Skills**：`ecc:tdd-workflow`
 > **DDD 文件**：`docs/domain/{bounded-contexts,ubiquitous-language,invariants,domain-events}.md`
 
-本文件為**主索引**。各 Phase 的詳細範本與檢查清單拆分至 `workflow/` 子目錄，agent 進入對應 Phase 時才需載入。
+本文件為**主索引**。Phase 2~7 的詳細範本與檢查清單拆分至 `workflow/` 子目錄，agent 進入對應 Phase 時才需載入；Phase 0/1/8 因內容精簡，直接寫在本文件。
 
 ---
 
@@ -37,7 +37,7 @@ Phase 7  測試驗收       → 全套測試 + Coverage
 Phase 8  開發報告       → 產出 Report
 ```
 
-每個 Phase 結束建立 Git checkpoint（commit prefix 見附錄）。
+每個 Phase 結束建立 Git checkpoint（commit prefix 見附錄）；**回報進度後等待使用者確認**才繼續。
 
 ---
 
@@ -49,7 +49,7 @@ Phase 8  開發報告       → 產出 Report
 
 1. `bounded-contexts.md` → BC 邊界、Aggregate、Port 清單
 2. `ubiquitous-language.md` → 術語對照（命名必須一致）
-3. `invariants.md` → 不變量清單
+3. `invariants.md` → 不變量清單 + Exception 名稱
 4. `domain-events.md` → 發布/訂閱事件清單
 
 ### Gate G0（全通過才進 Phase 1）
@@ -61,7 +61,7 @@ Phase 8  開發報告       → 產出 Report
 | G0-3 | Invariant | 不變量清單列出，對應 Exception 名稱確認 |
 | G0-4 | Domain Event | 發布/訂閱事件與 schema 欄位確認 |
 
-### 輸出物範本
+### 分析摘要輸出範本
 
 ```markdown
 ## [BC 名稱] 分析摘要
@@ -87,7 +87,8 @@ Phase 8  開發報告       → 產出 Report
 
 ## Phase 1：領域設計
 
-> **目標**：決定程式碼結構，不寫任何實作。
+> **目標**：決定程式碼結構，列出 class 清單，**不寫任何實作**。
+> **DDD Rules**：`clean-architecture-ddd`、`separation-of-concerns`、`domain-specific-naming`、`command-query-separation`、`explicit-side-effects`、`principle-of-least-astonishment`、`explicit-data-flow`
 
 ### Package 結構
 
@@ -114,69 +115,24 @@ com.example.claudecodeclidemo.<bc>/
 - [ ] Port Interface 位於 `application/port/`，以 `UseCase` 或 `Port` 結尾
 - [ ] Domain Event 為不可變 record / class，含 `occurredAt: Instant`
 
----
+### Gate
 
-## Phase 2：🔴 Red
-
-> **Skill**：`ecc:tdd-workflow`。**未確認 RED 前禁止修改 production code。**
-> **範本**：`workflow/phase-2-red-templates.md`
-
-撰寫順序：VO → Entity 不變量 → Entity 狀態轉換 → Domain Event 發布 → Use Case（Mock Port Out）。
-
-**RED Gate**：`./gradlew test` 確認測試全部 FAIL，失敗原因為「實作不存在」（非 syntax error）。
+列出所有將建立的 class（標註型別：Aggregate Root / Entity / VO / UseCase / Port / Event / Exception），等待使用者確認後才進 Phase 2。
 
 ---
 
-## Phase 3：🟢 Green
+## Phase 2~7：詳見 workflow/ 子目錄
 
-> **DDD Rule**：`functional-core-imperative-shell`
-> **範圍**：Domain 層 + Port Interface。Application Service 完整實作保留至 Phase 5。
-> **範本**：`workflow/phase-3-green-templates.md`
+| Phase | 主題 | 文件 |
+|---|---|---|
+| 2 | 🔴 Red 寫測試（必須 FAIL） | `workflow/phase-2-red-templates.md` |
+| 3 | 🟢 Green Domain 實作 + Port Interface | `workflow/phase-3-green-templates.md` |
+| 4 | 🔵 Refactor 檢查清單 | `workflow/phase-4-refactor-checklist.md` |
+| 5 | Application Service 完整實作 | `workflow/phase-5-application-templates.md` |
+| 6 | Adapter In/Out 實作 | `workflow/phase-6-adapter-templates.md` |
+| 7 | 全套測試 + Coverage 驗收 | `workflow/phase-7-acceptance.md` |
 
-實作順序：Value Objects → Domain Exceptions → Entities/Aggregate Root → Domain Events → Port Interfaces。
-
-**GREEN Gate**：`./gradlew test` 確認所有測試 PASS。
-
----
-
-## Phase 4：🔵 Refactor
-
-> **完整檢查清單**：`workflow/phase-4-refactor-checklist.md`
-
-涵蓋命名、函式設計、資料流、錯誤處理、控制流程、CQS。
-
-**Refactor Gate**：`./gradlew test` 測試必須仍全綠。
-
----
-
-## Phase 5：Application Layer
-
-> Phase 3 僅建立 Port Interface；此 Phase 完整實作 Application Service，加上 Spring 事務邊界、事件發布與測試。
-> **範本**：`workflow/phase-5-application-templates.md`
-
-核心守則：
-- Service **不含業務邏輯**（邏輯在 domain）
-- Service **不直接操作 DB**（透過 Port Out）
-- 事務邊界在此層（`@Transactional`）
-- 一個 Use Case = 一個公開方法
-
----
-
-## Phase 6：Adapter Layer
-
-> **DDD Rule**：`library-first-approach`、`clean-architecture-ddd`、`separation-of-concerns`
-> **範本**：`workflow/phase-6-adapter-templates.md`
-
-- **Adapter In**：`@RestController` 薄薄一層，只做 DTO ↔ Command/Query 轉換
-- **Adapter Out**：JPA Entity 與 Domain Entity 完全分離（JPA annotation 只出現在 `adapter/out/persistence/`）
-
----
-
-## Phase 7：測試驗收
-
-> **詳細指令與 Gate**：`workflow/phase-7-acceptance.md`
-
-執行 `./gradlew test jacocoTestReport`，確認 6 項驗收 Gate（V-1 ~ V-6）與 Coverage 達標（domain ≥ 90%、整體 ≥ 60%）。
+各 Phase 文件包含：DDD Rules、目標、執行順序、範本程式碼、Gate 指令。本文件不再重述以避免內容重複。
 
 ---
 
@@ -219,7 +175,9 @@ com.example.claudecodeclidemo.<bc>/
 | 安全性檢查 | `/ecc:security-review` |
 | Coverage 不足修補 | `/ecc:test-coverage` |
 
-## 附錄：Git Commit 慣例
+## 附錄：Git Commit 慣例（單一來源）
+
+各 Phase 文件不再重述 commit 指令，統一以下表為準：
 
 | 階段 | Prefix | 範例 |
 |---|---|---|

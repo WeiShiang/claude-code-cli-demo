@@ -80,8 +80,4 @@ public int reserveAndReturnRemaining(int quantity) { /* ... */ }
 # 測試必須仍為全綠
 ```
 
-**Git Checkpoint**
-```bash
-git add src/main/java/ src/test/java/
-git commit -m "refactor: clean up [BC名稱] domain layer"
-```
+> Git checkpoint commit prefix 見主索引附錄。

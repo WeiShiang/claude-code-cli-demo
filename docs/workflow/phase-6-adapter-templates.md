@@ -145,8 +145,4 @@ class OrderIntegrationTest {
 
 ---
 
-**Git Checkpoint**
-```bash
-git add src/main/java/ src/test/java/
-git commit -m "feat: implement [BC名稱] REST adapter and JPA adapter"
-```
+> Git checkpoint commit prefix 見主索引附錄。

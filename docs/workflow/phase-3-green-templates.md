@@ -104,8 +104,4 @@ public final class Money {
 # 預期：所有測試 PASS（綠燈）
 ```
 
-**Git Checkpoint**
-```bash
-git add src/main/java/
-git commit -m "feat: implement [BC名稱] domain layer - [功能描述]"
-```
+> Git checkpoint commit prefix 見主索引附錄。

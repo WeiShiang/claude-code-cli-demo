@@ -124,8 +124,4 @@ class CreateOrderServiceTest {
 
 ---
 
-**Git Checkpoint**
-```bash
-git add src/main/java/ src/test/java/
-git commit -m "feat: implement [BC名稱] application service - [功能描述]"
-```
+> Git checkpoint commit prefix 見主索引附錄。

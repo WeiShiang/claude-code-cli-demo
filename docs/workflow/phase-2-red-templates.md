@@ -107,10 +107,5 @@ class CreateOrderUseCaseTest {
 # 確認失敗原因是「實作不存在」，而非 syntax error
 ```
 
-**Git Checkpoint**
-```bash
-git add src/test/
-git commit -m "test: add red tests for [BC名稱] - [功能描述]"
-```
-
 > ⚠️ 未執行測試確認 FAIL 前，禁止進入 Phase 3。
+> Git checkpoint commit prefix 見主索引附錄。
