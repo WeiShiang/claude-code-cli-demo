@@ -1,4 +1,4 @@
-# Phase 6：Adapter Layer 範本
+# Phase 4：Adapter Layer 範本
 
 > **DDD Rules**：`library-first-approach`、`clean-architecture-ddd`、`separation-of-concerns`
 > 主流程文件：`../agent-workflow-ddd-tdd.md`

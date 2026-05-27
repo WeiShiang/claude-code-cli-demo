@@ -1,6 +1,6 @@
-# Phase 5：Application Layer 範本
+# Phase 3：Application Layer 範本
 
-> Phase 3 僅建立 Port Interface；此 Phase 完整實作 Application Service，加上 Spring 事務邊界、事件發布與完整測試覆蓋。
+> Phase 2 僅建立 Port Interface；此 Phase 完整實作 Application Service，加上 Spring 事務邊界、事件發布與完整測試覆蓋。
 > **DDD Rules**：`functional-core-imperative-shell`、`explicit-side-effects`、`error-handling`、`call-site-honesty`、`principle-of-least-astonishment`
 > 主流程文件：`../agent-workflow-ddd-tdd.md`
 

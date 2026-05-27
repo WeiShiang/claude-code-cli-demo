@@ -5,7 +5,7 @@
 > **Skills**：`ecc:tdd-workflow`
 > **DDD 文件**：`docs/domain/{bounded-contexts,ubiquitous-language,invariants,domain-events}.md`
 
-本文件為**主索引**。Phase 2~7 的詳細範本與檢查清單拆分至 `workflow/` 子目錄，agent 進入對應 Phase 時才需載入；Phase 0/1/8 因內容精簡，直接寫在本文件。
+本文件為**主索引**。Phase 2~5 的詳細範本與檢查清單拆分至 `workflow/` 子目錄，agent 進入對應 Phase 時才需載入；Phase 0/1/6 因內容精簡，直接寫在本文件。
 
 ---
 
@@ -14,12 +14,10 @@
 | 檔案 | 何時讀取 |
 |---|---|
 | `workflow/ddd-rules-reference.md` | 任何 Phase 需查 DDD Rule 細節時 |
-| `workflow/phase-2-red-templates.md` | Phase 2 撰寫測試前 |
-| `workflow/phase-3-green-templates.md` | Phase 3 實作 domain 前 |
-| `workflow/phase-4-refactor-checklist.md` | Phase 4 重構前 |
-| `workflow/phase-5-application-templates.md` | Phase 5 實作 Application Service 前 |
-| `workflow/phase-6-adapter-templates.md` | Phase 6 實作 Controller / JPA 前 |
-| `workflow/phase-7-acceptance.md` | Phase 7 驗收時 |
+| `workflow/phase-2-tdd-cycle.md` | Phase 2 TDD 循環（Red / Green / Refactor）前 |
+| `workflow/phase-3-application-templates.md` | Phase 3 實作 Application Service 前 |
+| `workflow/phase-4-adapter-templates.md` | Phase 4 實作 Controller / JPA 前 |
+| `workflow/phase-5-acceptance.md` | Phase 5 驗收時 |
 
 ---
 
@@ -28,13 +26,11 @@
 ```
 Phase 0  DDD 分析       → 讀取 4 份 DDD 文件，產出分析摘要
 Phase 1  領域設計       → 設計 Aggregate / Port（不寫程式碼）
-Phase 2  🔴 Red         → 先寫測試（必須 FAIL）
-Phase 3  🟢 Green       → 實作 Domain 通過測試
-Phase 4  🔵 Refactor    → 重構 + DDD rules 合規
-Phase 5  Application    → Use Case 完整實作
-Phase 6  Adapter        → Controller + JPA
-Phase 7  測試驗收       → 全套測試 + Coverage
-Phase 8  開發報告       → 產出 Report
+Phase 2  🔴🟢🔵 TDD 循環 → Red→Green→Refactor per Invariant，Gate 全通過才離開
+Phase 3  Application    → Use Case 完整實作
+Phase 4  Adapter        → Controller + JPA
+Phase 5  測試驗收       → 全套測試 + Coverage
+Phase 6  開發報告       → 產出 Report
 ```
 
 每個 Phase 結束建立 Git checkpoint（commit prefix 見附錄）；**回報進度後等待使用者確認**才繼續。
@@ -107,7 +103,7 @@ com.example.claudecodeclidemo.<bc>/
     └── out/persistence/  ← JPA Entity + Repository Impl
 ```
 
-### 設計核心檢查（重構期完整清單見 `workflow/phase-4-refactor-checklist.md`）
+### 設計核心檢查（重構期完整清單見 `workflow/phase-2-tdd-cycle.md` § 2c）
 
 - [ ] Domain 層無 `import org.springframework.*`、`import jakarta.persistence.*`
 - [ ] Value Object 不可變（`final` fields），實作 `equals()` / `hashCode()`
@@ -121,22 +117,20 @@ com.example.claudecodeclidemo.<bc>/
 
 ---
 
-## Phase 2~7：詳見 workflow/ 子目錄
+## Phase 2~5：詳見 workflow/ 子目錄
 
 | Phase | 主題 | 文件 |
 |---|---|---|
-| 2 | 🔴 Red 寫測試（必須 FAIL） | `workflow/phase-2-red-templates.md` |
-| 3 | 🟢 Green Domain 實作 + Port Interface | `workflow/phase-3-green-templates.md` |
-| 4 | 🔵 Refactor 檢查清單 | `workflow/phase-4-refactor-checklist.md` |
-| 5 | Application Service 完整實作 | `workflow/phase-5-application-templates.md` |
-| 6 | Adapter In/Out 實作 | `workflow/phase-6-adapter-templates.md` |
-| 7 | 全套測試 + Coverage 驗收 | `workflow/phase-7-acceptance.md` |
+| 2 | 🔴🟢🔵 TDD 循環（Red→Green→Refactor per Invariant） | `workflow/phase-2-tdd-cycle.md` |
+| 3 | Application Service 完整實作 | `workflow/phase-3-application-templates.md` |
+| 4 | Adapter In/Out 實作 | `workflow/phase-4-adapter-templates.md` |
+| 5 | 全套測試 + Coverage 驗收 | `workflow/phase-5-acceptance.md` |
 
 各 Phase 文件包含：DDD Rules、目標、執行順序、範本程式碼、Gate 指令。本文件不再重述以避免內容重複。
 
 ---
 
-## Phase 8：開發報告
+## Phase 6：開發報告
 
 產出至 `docs/dev-reports/<bc-name>-report.md`。
 
@@ -170,7 +164,7 @@ com.example.claudecodeclidemo.<bc>/
 | 時機 | Skill / Plugin |
 |---|---|
 | 進入任何 BC 開發 | `ddd` plugin 自動生效 |
-| Phase 2 ~ 4（TDD 循環） | `/ecc:tdd-workflow` |
+| Phase 2（TDD 循環） | `/ecc:tdd-workflow` |
 | 程式碼 review | `/ecc:code-review` |
 | 安全性檢查 | `/ecc:security-review` |
 | Coverage 不足修補 | `/ecc:test-coverage` |

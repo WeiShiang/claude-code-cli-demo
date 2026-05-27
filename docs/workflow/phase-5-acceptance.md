@@ -1,4 +1,4 @@
-# Phase 7：測試驗收
+# Phase 5：測試驗收
 
 > 主流程文件：`../agent-workflow-ddd-tdd.md`
 
