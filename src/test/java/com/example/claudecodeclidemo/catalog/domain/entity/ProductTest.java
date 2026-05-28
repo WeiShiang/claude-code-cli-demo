@@ -84,7 +84,13 @@ class ProductTest {
         assertThat(p.getStatus()).isEqualTo(ProductStatus.PUBLISHED);
         List<DomainEvent> events = p.pullDomainEvents();
         assertThat(events).hasSize(1);
-        assertThat(events.get(0)).isInstanceOf(ProductPublishedEvent.class);
+        ProductPublishedEvent evt = (ProductPublishedEvent) events.get(0);
+        assertThat(evt.productId()).isEqualTo(p.getId().value());
+        assertThat(evt.sku()).isEqualTo("ABC-123");
+        assertThat(evt.name()).isEqualTo("Test Product");
+        assertThat(evt.listPrice()).isEqualTo(Money.of(new BigDecimal("100"), TWD));
+        assertThat(evt.occurredAt()).isNotNull();
+        assertThat(evt.eventId()).isNotNull();
     }
 
     @Test
@@ -100,7 +106,11 @@ class ProductTest {
         assertThat(p.getStatus()).isEqualTo(ProductStatus.DRAFT);
         List<DomainEvent> events = p.pullDomainEvents();
         assertThat(events).hasSize(1);
-        assertThat(events.get(0)).isInstanceOf(ProductUnpublishedEvent.class);
+        ProductUnpublishedEvent evt = (ProductUnpublishedEvent) events.get(0);
+        assertThat(evt.productId()).isEqualTo(p.getId().value());
+        assertThat(evt.sku()).isEqualTo("ABC-123");
+        assertThat(evt.reason()).isEqualTo(UnpublishReason.DISCONTINUED);
+        assertThat(evt.occurredAt()).isNotNull();
     }
 
     @Test
@@ -117,7 +127,10 @@ class ProductTest {
         assertThat(p.getStatus()).isEqualTo(ProductStatus.ARCHIVED);
         List<DomainEvent> events = p.pullDomainEvents();
         assertThat(events).hasSize(1);
-        assertThat(events.get(0)).isInstanceOf(ProductArchivedEvent.class);
+        ProductArchivedEvent evt = (ProductArchivedEvent) events.get(0);
+        assertThat(evt.productId()).isEqualTo(p.getId().value());
+        assertThat(evt.occurredAt()).isNotNull();
+        assertThat(evt.eventId()).isNotNull();
     }
 
     @Test
@@ -146,8 +159,26 @@ class ProductTest {
         p.updatePrice(Money.of(new BigDecimal("100"), TWD));
         List<DomainEvent> events = p.pullDomainEvents();
         assertThat(events).hasSize(1);
-        assertThat(events.get(0)).isInstanceOf(PriceChangedEvent.class);
+        PriceChangedEvent evt = (PriceChangedEvent) events.get(0);
+        assertThat(evt.productId()).isEqualTo(p.getId().value());
+        assertThat(evt.sku()).isEqualTo("ABC-123");
+        assertThat(evt.previousPrice()).isNull();
+        assertThat(evt.newPrice()).isEqualTo(Money.of(new BigDecimal("100"), TWD));
+        assertThat(evt.effectiveAt()).isNotNull();
         assertThat(p.getListPrice()).contains(ListPrice.of(Money.of(new BigDecimal("100"), TWD)));
+    }
+
+    @Test
+    void updatePrice_second_change_carries_previousPrice_in_event() {
+        Product p = newDraft();
+        Money first = Money.of(new BigDecimal("100"), TWD);
+        Money second = Money.of(new BigDecimal("200"), TWD);
+        p.updatePrice(first);
+        p.pullDomainEvents();
+        p.updatePrice(second);
+        PriceChangedEvent evt = (PriceChangedEvent) p.pullDomainEvents().get(0);
+        assertThat(evt.previousPrice()).isEqualTo(first);
+        assertThat(evt.newPrice()).isEqualTo(second);
     }
 
     @Test

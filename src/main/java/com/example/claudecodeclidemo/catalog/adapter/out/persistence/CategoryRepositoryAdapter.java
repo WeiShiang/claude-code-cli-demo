@@ -41,6 +41,6 @@ public class CategoryRepositoryAdapter implements CategoryRepository {
 
     private Category toDomain(CategoryJpaEntity e) {
         CategoryId parent = e.getParentId() == null ? null : CategoryId.of(e.getParentId());
-        return Category.of(CategoryId.of(e.getId()), e.getName(), parent);
+        return Category.reconstitute(CategoryId.of(e.getId()), e.getName(), parent, e.getCreatedAt());
     }
 }

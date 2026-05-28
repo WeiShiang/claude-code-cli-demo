@@ -26,8 +26,8 @@ public class Category extends AggregateRoot<CategoryId> {
         return new Category(CategoryId.generate(), name, null, Instant.now());
     }
 
-    public static Category of(CategoryId id, String name, CategoryId parentId) {
-        return new Category(id, name, parentId, Instant.now());
+    public static Category reconstitute(CategoryId id, String name, CategoryId parentId, Instant createdAt) {
+        return new Category(id, name, parentId, Objects.requireNonNull(createdAt, "createdAt"));
     }
 
     @Override public CategoryId getId() { return id; }

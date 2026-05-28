@@ -135,7 +135,7 @@ public class Product extends AggregateRoot<ProductId> {
         listPrice = nextPrice;
         touchUpdatedAt();
         registerEvent(new PriceChangedEvent(
-                UUID.randomUUID(), updatedAt, id.value(), sku.value(), previous, newPrice));
+                UUID.randomUUID(), updatedAt, id.value(), sku.value(), previous, newPrice, updatedAt));
     }
 
     public void rename(String newName) {

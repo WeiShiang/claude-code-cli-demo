@@ -36,7 +36,7 @@ class CategoryRepositoryAdapterTest {
     @Test
     void save_persistsParentId() {
         Category parent = Category.create("Electronics");
-        Category child = Category.of(CategoryId.generate(), "Phones", parent.getId());
+        Category child = Category.reconstitute(CategoryId.generate(), "Phones", parent.getId(), java.time.Instant.now());
 
         adapter.save(parent);
         adapter.save(child);

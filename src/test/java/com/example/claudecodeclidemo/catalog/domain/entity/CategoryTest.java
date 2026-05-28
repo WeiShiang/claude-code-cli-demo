@@ -40,8 +40,8 @@ class CategoryTest {
     @Test
     void equals_by_id() {
         CategoryId id = CategoryId.generate();
-        Category c1 = Category.of(id, "A", null);
-        Category c2 = Category.of(id, "B", null);
+        Category c1 = Category.reconstitute(id, "A", null, java.time.Instant.now());
+        Category c2 = Category.reconstitute(id, "B", null, java.time.Instant.now());
         assertThat(c1).isEqualTo(c2);
     }
 }

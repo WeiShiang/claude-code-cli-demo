@@ -54,7 +54,7 @@
 | `name` | string | |
 | `listPrice` | Money(`{amount, currency}`) | |
 | `categoryIds` | UUID[] | |
-| `publishedAt` | ISO-8601 | |
+| `occurredAt` | ISO-8601 | 商品發布時間（envelope 通用欄位，語意同 `publishedAt`） |
 
 **訂閱方**:搜尋索引器;(未來)Cart Context 用於 product directory 預載。
 
@@ -66,7 +66,7 @@
 | `productId` | UUID | |
 | `sku` | string | |
 | `reason` | enum | `Discontinued` \| `Withdrawn` \| `Replaced` |
-| `unpublishedAt` | ISO-8601 | |
+| `occurredAt` | ISO-8601 | 商品下架時間（envelope 通用欄位，語意同 `unpublishedAt`） |
 
 **訂閱方**:搜尋索引器(從索引移除);Cart Context(對含此商品的 active cart 設 `NeedsRevalidation`)。
 
@@ -89,7 +89,7 @@
 | 欄位 | 型別 | 說明 |
 |---|---|---|
 | `productId` | UUID | |
-| `archivedAt` | ISO-8601 | |
+| `occurredAt` | ISO-8601 | 商品封存時間（envelope 通用欄位，語意同 `archivedAt`） |
 
 **訂閱方**:搜尋索引器;Cart Context(視同 `Unpublished` 處理 — 設標記)。
 

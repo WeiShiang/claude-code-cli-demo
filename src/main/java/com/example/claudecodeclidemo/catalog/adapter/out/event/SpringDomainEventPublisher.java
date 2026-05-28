@@ -4,6 +4,8 @@ import com.example.claudecodeclidemo.catalog.application.port.out.DomainEventPub
 import com.example.claudecodeclidemo.shared.domain.DomainEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Component
 public class SpringDomainEventPublisher implements DomainEventPublisher {
@@ -16,6 +18,16 @@ public class SpringDomainEventPublisher implements DomainEventPublisher {
 
     @Override
     public void publish(DomainEvent event) {
-        applicationEventPublisher.publishEvent(event);
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            // Defer to after commit so consumers never see uncommitted aggregate state
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    applicationEventPublisher.publishEvent(event);
+                }
+            });
+        } else {
+            applicationEventPublisher.publishEvent(event);
+        }
     }
 }

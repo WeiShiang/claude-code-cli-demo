@@ -17,6 +17,7 @@ import com.example.claudecodeclidemo.catalog.domain.exception.ProductNotFoundExc
 import com.example.claudecodeclidemo.catalog.domain.vo.CategoryId;
 import com.example.claudecodeclidemo.catalog.domain.vo.Money;
 import com.example.claudecodeclidemo.catalog.domain.vo.ProductId;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,7 +48,12 @@ public class ProductCommandService implements
             throw new DuplicateSkuException("sku already exists: " + command.sku().value());
         }
         Product product = Product.createDraft(command.sku(), command.name(), command.description());
-        productRepository.save(product);
+        try {
+            productRepository.save(product);
+        } catch (DataIntegrityViolationException ex) {
+            // Race condition: another transaction inserted the same SKU between pre-check and save
+            throw new DuplicateSkuException("sku already exists: " + command.sku().value());
+        }
         publishPending(product);
         return product.getId();
     }

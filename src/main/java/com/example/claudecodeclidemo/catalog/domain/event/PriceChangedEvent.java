@@ -12,5 +12,6 @@ public record PriceChangedEvent(
         UUID productId,
         String sku,
         Money previousPrice,
-        Money newPrice
+        Money newPrice,
+        Instant effectiveAt
 ) implements DomainEvent {}
