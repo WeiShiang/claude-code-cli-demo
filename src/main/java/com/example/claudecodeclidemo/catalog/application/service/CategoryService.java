@@ -22,8 +22,8 @@ public class CategoryService implements CreateCategoryUseCase, QueryCategoryUseC
     }
 
     @Override
-    public CategoryId createCategory(String name) {
-        Category category = Category.create(name);
+    public CategoryId createCategory(CreateCategoryCommand command) {
+        Category category = Category.create(command.name());
         categoryRepository.save(category);
         return category.getId();
     }

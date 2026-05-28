@@ -4,5 +4,8 @@ import com.example.claudecodeclidemo.catalog.domain.vo.CategoryId;
 import com.example.claudecodeclidemo.catalog.domain.vo.ProductId;
 
 public interface AssignCategoryUseCase {
-    void assignCategory(ProductId productId, CategoryId categoryId);
+    void assignCategory(AssignCategoryCommand command);
+
+    record AssignCategoryCommand(ProductId productId, CategoryId categoryId) {
+    }
 }

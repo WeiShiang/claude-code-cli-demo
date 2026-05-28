@@ -2,14 +2,18 @@ package com.example.claudecodeclidemo.catalog.adapter.in.web;
 
 import com.example.claudecodeclidemo.catalog.application.port.in.ArchiveProductUseCase;
 import com.example.claudecodeclidemo.catalog.application.port.in.AssignCategoryUseCase;
+import com.example.claudecodeclidemo.catalog.application.port.in.AssignCategoryUseCase.AssignCategoryCommand;
 import com.example.claudecodeclidemo.catalog.application.port.in.CreateProductUseCase;
 import com.example.claudecodeclidemo.catalog.application.port.in.CreateProductUseCase.CreateProductCommand;
 import com.example.claudecodeclidemo.catalog.application.port.in.PublishProductUseCase;
 import com.example.claudecodeclidemo.catalog.application.port.in.QueryProductUseCase;
 import com.example.claudecodeclidemo.catalog.application.port.in.QueryProductUseCase.ProductView;
 import com.example.claudecodeclidemo.catalog.application.port.in.RemoveCategoryUseCase;
+import com.example.claudecodeclidemo.catalog.application.port.in.RemoveCategoryUseCase.RemoveCategoryCommand;
 import com.example.claudecodeclidemo.catalog.application.port.in.UnpublishProductUseCase;
+import com.example.claudecodeclidemo.catalog.application.port.in.UnpublishProductUseCase.UnpublishProductCommand;
 import com.example.claudecodeclidemo.catalog.application.port.in.UpdatePriceUseCase;
+import com.example.claudecodeclidemo.catalog.application.port.in.UpdatePriceUseCase.UpdatePriceCommand;
 import com.example.claudecodeclidemo.catalog.application.port.in.UpdateProductDetailsUseCase;
 import com.example.claudecodeclidemo.catalog.application.port.in.UpdateProductDetailsUseCase.UpdateProductDetailsCommand;
 import com.example.claudecodeclidemo.catalog.domain.event.UnpublishReason;
@@ -128,7 +132,8 @@ class ProductControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"reason\":\"DISCONTINUED\"}"))
                 .andExpect(status().isNoContent());
-        verify(unpublishProduct).unpublishProduct(ProductId.of(id), UnpublishReason.DISCONTINUED);
+        verify(unpublishProduct).unpublishProduct(
+                new UnpublishProductCommand(ProductId.of(id), UnpublishReason.DISCONTINUED));
     }
 
     @Test
@@ -147,15 +152,14 @@ class ProductControllerTest {
                         .content("{\"amount\":99.50,\"currency\":\"TWD\"}"))
                 .andExpect(status().isNoContent());
         verify(updatePrice).updatePrice(
-                ProductId.of(id),
-                Money.of(new BigDecimal("99.50"), TWD));
+                new UpdatePriceCommand(ProductId.of(id), Money.of(new BigDecimal("99.50"), TWD)));
     }
 
     @Test
     void price_currencyMismatch_returns400() throws Exception {
         UUID id = UUID.randomUUID();
         doThrow(new CurrencyMismatchException("mismatch"))
-                .when(updatePrice).updatePrice(any(), any());
+                .when(updatePrice).updatePrice(any());
 
         mockMvc.perform(patch("/api/products/{id}/price", id)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -188,7 +192,7 @@ class ProductControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"categoryId\":\"" + categoryId + "\"}"))
                 .andExpect(status().isNoContent());
-        verify(assignCategory).assignCategory(ProductId.of(id), CategoryId.of(categoryId));
+        verify(assignCategory).assignCategory(new AssignCategoryCommand(ProductId.of(id), CategoryId.of(categoryId)));
     }
 
     @Test
@@ -197,7 +201,7 @@ class ProductControllerTest {
         UUID categoryId = UUID.randomUUID();
         mockMvc.perform(delete("/api/products/{id}/categories/{cid}", id, categoryId))
                 .andExpect(status().isNoContent());
-        verify(removeCategory).removeCategory(ProductId.of(id), CategoryId.of(categoryId));
+        verify(removeCategory).removeCategory(new RemoveCategoryCommand(ProductId.of(id), CategoryId.of(categoryId)));
     }
 
     @Test

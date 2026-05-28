@@ -4,5 +4,8 @@ import com.example.claudecodeclidemo.catalog.domain.vo.CategoryId;
 import com.example.claudecodeclidemo.catalog.domain.vo.ProductId;
 
 public interface RemoveCategoryUseCase {
-    void removeCategory(ProductId productId, CategoryId categoryId);
+    void removeCategory(RemoveCategoryCommand command);
+
+    record RemoveCategoryCommand(ProductId productId, CategoryId categoryId) {
+    }
 }

@@ -1,5 +1,6 @@
 package com.example.claudecodeclidemo.catalog.application.service;
 
+import com.example.claudecodeclidemo.catalog.application.port.in.CreateCategoryUseCase.CreateCategoryCommand;
 import com.example.claudecodeclidemo.catalog.application.port.in.QueryCategoryUseCase.CategoryView;
 import com.example.claudecodeclidemo.catalog.application.port.out.CategoryRepository;
 import com.example.claudecodeclidemo.catalog.domain.entity.Category;
@@ -28,7 +29,7 @@ class CategoryServiceTest {
 
     @Test
     void createCategory_saves_and_returns_id() {
-        CategoryId id = service.createCategory("Electronics");
+        CategoryId id = service.createCategory(new CreateCategoryCommand("Electronics"));
         assertThat(id).isNotNull();
         verify(categoryRepository).save(any(Category.class));
     }

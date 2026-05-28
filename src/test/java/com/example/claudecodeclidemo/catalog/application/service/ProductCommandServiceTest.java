@@ -1,6 +1,10 @@
 package com.example.claudecodeclidemo.catalog.application.service;
 
 import com.example.claudecodeclidemo.catalog.application.port.in.CreateProductUseCase.CreateProductCommand;
+import com.example.claudecodeclidemo.catalog.application.port.in.AssignCategoryUseCase.AssignCategoryCommand;
+import com.example.claudecodeclidemo.catalog.application.port.in.RemoveCategoryUseCase.RemoveCategoryCommand;
+import com.example.claudecodeclidemo.catalog.application.port.in.UnpublishProductUseCase.UnpublishProductCommand;
+import com.example.claudecodeclidemo.catalog.application.port.in.UpdatePriceUseCase.UpdatePriceCommand;
 import com.example.claudecodeclidemo.catalog.application.port.in.UpdateProductDetailsUseCase.UpdateProductDetailsCommand;
 import com.example.claudecodeclidemo.catalog.application.port.out.DomainEventPublisher;
 import com.example.claudecodeclidemo.catalog.application.port.out.ProductRepository;
@@ -88,7 +92,7 @@ class ProductCommandServiceTest {
     void unpublishProduct_published_back_to_draft() {
         Product p = published();
         when(productRepository.findById(p.getId())).thenReturn(Optional.of(p));
-        service.unpublishProduct(p.getId(), UnpublishReason.DISCONTINUED);
+        service.unpublishProduct(new UnpublishProductCommand(p.getId(), UnpublishReason.DISCONTINUED));
         assertThat(p.getStatus()).isEqualTo(ProductStatus.DRAFT);
     }
 
@@ -96,7 +100,7 @@ class ProductCommandServiceTest {
     void updatePrice_publishes_event() {
         Product p = Product.createDraft(Sku.of("S"), "n", "d");
         when(productRepository.findById(any())).thenReturn(Optional.of(p));
-        service.updatePrice(p.getId(), Money.of(new BigDecimal("100"), TWD));
+        service.updatePrice(new UpdatePriceCommand(p.getId(), Money.of(new BigDecimal("100"), TWD)));
         verify(eventPublisher).publishAll(anyList());
         assertThat(p.getListPrice()).isPresent();
     }
@@ -115,9 +119,9 @@ class ProductCommandServiceTest {
         Product p = Product.createDraft(Sku.of("S"), "n", "d");
         CategoryId cat = CategoryId.generate();
         when(productRepository.findById(any())).thenReturn(Optional.of(p));
-        service.assignCategory(p.getId(), cat);
+        service.assignCategory(new AssignCategoryCommand(p.getId(), cat));
         assertThat(p.getCategoryIds()).contains(cat);
-        service.removeCategory(p.getId(), cat);
+        service.removeCategory(new RemoveCategoryCommand(p.getId(), cat));
         assertThat(p.getCategoryIds()).doesNotContain(cat);
     }
 

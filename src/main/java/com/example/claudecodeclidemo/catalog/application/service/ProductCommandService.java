@@ -11,11 +11,8 @@ import com.example.claudecodeclidemo.catalog.application.port.in.UpdateProductDe
 import com.example.claudecodeclidemo.catalog.application.port.out.DomainEventPublisher;
 import com.example.claudecodeclidemo.catalog.application.port.out.ProductRepository;
 import com.example.claudecodeclidemo.catalog.domain.entity.Product;
-import com.example.claudecodeclidemo.catalog.domain.event.UnpublishReason;
 import com.example.claudecodeclidemo.catalog.domain.exception.DuplicateSkuException;
 import com.example.claudecodeclidemo.catalog.domain.exception.ProductNotFoundException;
-import com.example.claudecodeclidemo.catalog.domain.vo.CategoryId;
-import com.example.claudecodeclidemo.catalog.domain.vo.Money;
 import com.example.claudecodeclidemo.catalog.domain.vo.ProductId;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -67,9 +64,9 @@ public class ProductCommandService implements
     }
 
     @Override
-    public void unpublishProduct(ProductId productId, UnpublishReason reason) {
-        Product product = loadProduct(productId);
-        product.unpublish(reason);
+    public void unpublishProduct(UnpublishProductCommand command) {
+        Product product = loadProduct(command.productId());
+        product.unpublish(command.reason());
         productRepository.save(product);
         publishPending(product);
     }
@@ -83,9 +80,9 @@ public class ProductCommandService implements
     }
 
     @Override
-    public void updatePrice(ProductId productId, Money newPrice) {
-        Product product = loadProduct(productId);
-        product.updatePrice(newPrice);
+    public void updatePrice(UpdatePriceCommand command) {
+        Product product = loadProduct(command.productId());
+        product.updatePrice(command.newPrice());
         productRepository.save(product);
         publishPending(product);
     }
@@ -104,17 +101,17 @@ public class ProductCommandService implements
     }
 
     @Override
-    public void assignCategory(ProductId productId, CategoryId categoryId) {
-        Product product = loadProduct(productId);
-        product.assignCategory(categoryId);
+    public void assignCategory(AssignCategoryCommand command) {
+        Product product = loadProduct(command.productId());
+        product.assignCategory(command.categoryId());
         productRepository.save(product);
         publishPending(product);
     }
 
     @Override
-    public void removeCategory(ProductId productId, CategoryId categoryId) {
-        Product product = loadProduct(productId);
-        product.removeCategory(categoryId);
+    public void removeCategory(RemoveCategoryCommand command) {
+        Product product = loadProduct(command.productId());
+        product.removeCategory(command.categoryId());
         productRepository.save(product);
         publishPending(product);
     }

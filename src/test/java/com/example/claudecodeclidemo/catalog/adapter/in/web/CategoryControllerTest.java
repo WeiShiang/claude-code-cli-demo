@@ -1,6 +1,7 @@
 package com.example.claudecodeclidemo.catalog.adapter.in.web;
 
 import com.example.claudecodeclidemo.catalog.application.port.in.CreateCategoryUseCase;
+import com.example.claudecodeclidemo.catalog.application.port.in.CreateCategoryUseCase.CreateCategoryCommand;
 import com.example.claudecodeclidemo.catalog.application.port.in.QueryCategoryUseCase;
 import com.example.claudecodeclidemo.catalog.application.port.in.QueryCategoryUseCase.CategoryView;
 import com.example.claudecodeclidemo.catalog.domain.exception.CategoryNotFoundException;
@@ -38,14 +39,15 @@ class CategoryControllerTest {
     @Test
     void create_returnsId() throws Exception {
         UUID generated = UUID.randomUUID();
-        when(createCategory.createCategory("Electronics")).thenReturn(CategoryId.of(generated));
+        when(createCategory.createCategory(new CreateCategoryCommand("Electronics")))
+                .thenReturn(CategoryId.of(generated));
 
         mockMvc.perform(post("/api/categories")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Electronics\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(generated.toString()));
-        verify(createCategory).createCategory("Electronics");
+        verify(createCategory).createCategory(new CreateCategoryCommand("Electronics"));
     }
 
     @Test

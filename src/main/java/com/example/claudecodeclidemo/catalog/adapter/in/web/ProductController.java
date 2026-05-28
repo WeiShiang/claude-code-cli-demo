@@ -2,14 +2,18 @@ package com.example.claudecodeclidemo.catalog.adapter.in.web;
 
 import com.example.claudecodeclidemo.catalog.application.port.in.ArchiveProductUseCase;
 import com.example.claudecodeclidemo.catalog.application.port.in.AssignCategoryUseCase;
+import com.example.claudecodeclidemo.catalog.application.port.in.AssignCategoryUseCase.AssignCategoryCommand;
 import com.example.claudecodeclidemo.catalog.application.port.in.CreateProductUseCase;
 import com.example.claudecodeclidemo.catalog.application.port.in.CreateProductUseCase.CreateProductCommand;
 import com.example.claudecodeclidemo.catalog.application.port.in.PublishProductUseCase;
 import com.example.claudecodeclidemo.catalog.application.port.in.QueryProductUseCase;
 import com.example.claudecodeclidemo.catalog.application.port.in.QueryProductUseCase.ProductView;
 import com.example.claudecodeclidemo.catalog.application.port.in.RemoveCategoryUseCase;
+import com.example.claudecodeclidemo.catalog.application.port.in.RemoveCategoryUseCase.RemoveCategoryCommand;
 import com.example.claudecodeclidemo.catalog.application.port.in.UnpublishProductUseCase;
+import com.example.claudecodeclidemo.catalog.application.port.in.UnpublishProductUseCase.UnpublishProductCommand;
 import com.example.claudecodeclidemo.catalog.application.port.in.UpdatePriceUseCase;
+import com.example.claudecodeclidemo.catalog.application.port.in.UpdatePriceUseCase.UpdatePriceCommand;
 import com.example.claudecodeclidemo.catalog.application.port.in.UpdateProductDetailsUseCase;
 import com.example.claudecodeclidemo.catalog.application.port.in.UpdateProductDetailsUseCase.UpdateProductDetailsCommand;
 import com.example.claudecodeclidemo.catalog.domain.event.UnpublishReason;
@@ -82,7 +86,7 @@ public class ProductController {
 
     @PostMapping("/{id}/unpublish")
     public ResponseEntity<Void> unpublish(@PathVariable UUID id, @RequestBody UnpublishRequest req) {
-        unpublishProduct.unpublishProduct(ProductId.of(id), req.reason());
+        unpublishProduct.unpublishProduct(new UnpublishProductCommand(ProductId.of(id), req.reason()));
         return ResponseEntity.noContent().build();
     }
 
@@ -94,8 +98,8 @@ public class ProductController {
 
     @PatchMapping("/{id}/price")
     public ResponseEntity<Void> price(@PathVariable UUID id, @RequestBody UpdatePriceRequest req) {
-        updatePrice.updatePrice(ProductId.of(id),
-                Money.of(req.amount(), Currency.getInstance(req.currency())));
+        updatePrice.updatePrice(new UpdatePriceCommand(
+                ProductId.of(id), Money.of(req.amount(), Currency.getInstance(req.currency()))));
         return ResponseEntity.noContent().build();
     }
 
@@ -108,13 +112,15 @@ public class ProductController {
 
     @PostMapping("/{id}/categories")
     public ResponseEntity<Void> assignCategory(@PathVariable UUID id, @RequestBody CategoryRequest req) {
-        assignCategory.assignCategory(ProductId.of(id), CategoryId.of(req.categoryId()));
+        assignCategory.assignCategory(new AssignCategoryCommand(
+                ProductId.of(id), CategoryId.of(req.categoryId())));
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}/categories/{categoryId}")
     public ResponseEntity<Void> removeCategoryEndpoint(@PathVariable UUID id, @PathVariable UUID categoryId) {
-        removeCategory.removeCategory(ProductId.of(id), CategoryId.of(categoryId));
+        removeCategory.removeCategory(new RemoveCategoryCommand(
+                ProductId.of(id), CategoryId.of(categoryId)));
         return ResponseEntity.noContent().build();
     }
 

@@ -1,6 +1,7 @@
 package com.example.claudecodeclidemo.catalog.adapter.in.web;
 
 import com.example.claudecodeclidemo.catalog.application.port.in.CreateCategoryUseCase;
+import com.example.claudecodeclidemo.catalog.application.port.in.CreateCategoryUseCase.CreateCategoryCommand;
 import com.example.claudecodeclidemo.catalog.application.port.in.QueryCategoryUseCase;
 import com.example.claudecodeclidemo.catalog.application.port.in.QueryCategoryUseCase.CategoryView;
 import com.example.claudecodeclidemo.catalog.domain.vo.CategoryId;
@@ -28,7 +29,7 @@ public class CategoryController {
 
     @PostMapping
     public IdResponse create(@RequestBody CreateRequest req) {
-        CategoryId id = createCategory.createCategory(req.name());
+        CategoryId id = createCategory.createCategory(new CreateCategoryCommand(req.name()));
         return new IdResponse(id.value());
     }
 

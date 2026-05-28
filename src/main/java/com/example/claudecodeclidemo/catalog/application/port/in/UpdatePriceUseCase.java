@@ -4,5 +4,8 @@ import com.example.claudecodeclidemo.catalog.domain.vo.Money;
 import com.example.claudecodeclidemo.catalog.domain.vo.ProductId;
 
 public interface UpdatePriceUseCase {
-    void updatePrice(ProductId productId, Money newPrice);
+    void updatePrice(UpdatePriceCommand command);
+
+    record UpdatePriceCommand(ProductId productId, Money newPrice) {
+    }
 }
