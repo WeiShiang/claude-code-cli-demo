@@ -181,3 +181,5 @@ com.example.claudecodeclidemo.<bc>/
 | Application | `feat:` | `feat: implement CreateOrderService` |
 | Adapter | `feat:` | `feat: implement Order REST adapter and JPA adapter` |
 | Fix | `fix:` | `fix: handle empty cart in checkout` |
+| Acceptance（Phase 5） | `test:` | `test: all catalog acceptance gates passed` |
+| Report（Phase 6） | `docs:` | `docs: add catalog dev report` |
